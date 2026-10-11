@@ -37,11 +37,12 @@ export type InsertResult = "created" | "duplicate" | "not_configured" | "error";
 
 export async function insertWaitlist(entry: WaitlistEntry, env: Record<string, string | undefined> = process.env): Promise<InsertResult> {
   const url = env.SUPABASE_URL;
-  const key = env.SUPABASE_ANON_KEY;
+  // Secret (service) key: the public key ships to browsers for country votes, so it has no waitlist access.
+  const key = env.SUPABASE_SECRET_KEY;
   if (!url || !key) return "not_configured";
 
   const headers: Record<string, string> = { apikey: key, "Content-Type": "application/json", Prefer: "return=minimal" };
-  if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`; // legacy JWT anon keys; sb_publishable_ keys use apikey only
+  if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`; // legacy JWT service_role keys; sb_secret_ keys use apikey only
 
   try {
     const res = await fetch(`${url.replace(/\/+$/, "")}/rest/v1/waitlist`, {

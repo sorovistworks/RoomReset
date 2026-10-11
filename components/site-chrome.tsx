@@ -61,7 +61,7 @@ export function SiteFooter() {
             Personal interior design for people who rent. Discover your Taste DNA today — rental-friendly makeovers are on the way.
           </p>
           <p className="mt-6 text-xs leading-relaxed text-ink-soft">
-            Your Taste DNA answers stay in this browser. We only store your email if you join early access.
+            Your Taste DNA answers stay in this browser. We only store your email if you join early access, and your country if you vote for it.
           </p>
         </div>
         <FooterCol

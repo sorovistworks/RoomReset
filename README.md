@@ -38,7 +38,9 @@ npm run build && npm start
 | Name | Required | Purpose |
 | --- | --- | --- |
 | `SUPABASE_URL` | For the waitlist | e.g. `https://xyz.supabase.co` |
-| `SUPABASE_ANON_KEY` | For the waitlist | Anon or publishable key. **Server-only — never add a `NEXT_PUBLIC_` prefix.** |
+| `SUPABASE_SECRET_KEY` | For the waitlist | Secret / service_role key. **Server-only — never add a `NEXT_PUBLIC_` prefix.** |
+| `NEXT_PUBLIC_SUPABASE_URL` | For country votes | Same project URL. Public by design. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | For country votes | Publishable / anon key. Public by design: it can only call the two vote functions. |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Before launch | Shown on contact/privacy/terms. Falls back to the placeholder `hello@roomreset.example`. |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical URL for metadata and OpenGraph |
 
@@ -47,11 +49,15 @@ If the Supabase variables are missing, the form says so honestly and nothing is 
 ## Supabase waitlist setup
 
 1. Create a Supabase project.
-2. In the SQL Editor, run [`supabase/migrations/001_waitlist.sql`](supabase/migrations/001_waitlist.sql).
-3. Copy the project URL and anon/publishable key into `.env.local` (and into your host's environment settings).
-4. Review sign-ups in **Table Editor → waitlist**.
+2. In the SQL Editor, run [`001_waitlist.sql`](supabase/migrations/001_waitlist.sql), then [`002_country_votes.sql`](supabase/migrations/002_country_votes.sql).
+3. Copy the project URL and **secret** key into `SUPABASE_URL` / `SUPABASE_SECRET_KEY` (server only), and the URL and **publishable** key into the two `NEXT_PUBLIC_SUPABASE_*` variables.
+4. Review sign-ups in **Table Editor → waitlist** and votes in **country_votes**.
 
-The table allows insert-only access with that key (RLS has no select policy), so submitted emails can't be read publicly. Duplicate emails return "You're already on the list".
+The public key can't touch the `waitlist` table at all; only the server, with the secret key, writes to it. Duplicate emails return "You're already on the list".
+
+### Country votes on the GitHub Pages preview
+
+Add two repository variables (**Settings → Secrets and variables → Actions → Variables**): `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, then re-run the Pages workflow. Until then the vote section says "Voting opens soon". Each internet connection gets one vote (stored as a salted hash, never the IP), so people sharing a connection share a vote.
 
 ## Deploying
 

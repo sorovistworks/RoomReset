@@ -36,6 +36,13 @@ export default function PrivacyPage() {
         publicly accessible. Every email will include a way to unsubscribe, and you can ask us to delete your details at any time.
       </p>
 
+      <h2>Country votes</h2>
+      <p>
+        If you vote to bring RoomReset to your country, we store the country you chose and a one-way code made from your internet connection (a salted
+        hash of your IP address), so each connection counts once. We never store your IP address itself, and the code can&apos;t be turned back into it.
+        Only the total votes per country are shown publicly. Your browser also remembers which country you picked, so it can highlight it.
+      </p>
+
       <h2>Room photos</h2>
       <p>RoomReset does not currently accept or store room photographs. When that feature launches, we will update this policy before collecting any.</p>
 
