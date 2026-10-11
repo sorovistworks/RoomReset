@@ -112,11 +112,17 @@ export default function Home() {
               <h3 className="mt-8 font-serif text-3xl">{s.t}</h3>
               <p className="mt-3 leading-relaxed text-ink-soft">{s.b}</p>
               {s.soon ? <ComingSoon className="mt-6 self-start" /> : <span className="mt-6 text-xs uppercase tracking-[0.16em] text-olive">Available now</span>}
-              {/* Plain <a>: in-page hashes scroll via Lenis, and /discover needs no client routing from here. */}
               <div className="mt-auto pt-8">
-                <a href={s.cta[0]} className={buttonClass("secondary", "min-h-11 px-5")}>
-                  {s.cta[1]} <ArrowRight className="size-4" aria-hidden />
-                </a>
+                {/* In-page hashes stay plain <a> so Lenis scrolls them; page links go through Link for basePath. */}
+                {s.cta[0].startsWith("#") ? (
+                  <a href={s.cta[0]} className={buttonClass("secondary", "min-h-11 px-5")}>
+                    {s.cta[1]} <ArrowRight className="size-4" aria-hidden />
+                  </a>
+                ) : (
+                  <ButtonLink href={s.cta[0]} variant="secondary" className="min-h-11 px-5">
+                    {s.cta[1]} <ArrowRight className="size-4" aria-hidden />
+                  </ButtonLink>
+                )}
               </div>
             </li>
           ))}

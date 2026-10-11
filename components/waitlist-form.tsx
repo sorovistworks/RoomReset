@@ -41,7 +41,7 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
 
     setState({ kind: "submitting" });
     try {
-      const res = await fetch("/api/waitlist", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/waitlist`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -56,7 +56,8 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) return setState({ kind: "done", duplicate: data.status === "duplicate", name: firstName || undefined });
-      if (data.code === "not_configured") return setState({ kind: "unconfigured" });
+      // 404/405: a static preview (e.g. GitHub Pages) has no API, so sign-ups are simply not open there.
+      if (data.code === "not_configured" || res.status === 404 || res.status === 405) return setState({ kind: "unconfigured" });
       setState({ kind: "error", field: data.field, message: data.error ?? "Something went wrong. Please try again." });
     } catch {
       setState({ kind: "error", message: "We couldn't reach the server. Check your connection and try again." });
