@@ -13,14 +13,14 @@ export default function TermsPage() {
 
       <h2>What RoomReset offers today</h2>
       <p>
-        RoomReset currently offers a free Taste DNA questionnaire and personalised style report, plus an early-access list. AI room makeovers, shopping,
+        RoomReset currently offers a free Taste DNA questionnaire and personalised home plan, plus an early-access list. AI room makeovers, shopping,
         budget plans and design refinements are in development and clearly marked &ldquo;Coming soon&rdquo;. Nothing on the site can be purchased, and no
         payment is ever requested.
       </p>
 
       <h2>Design suggestions</h2>
       <p>
-        Your Taste DNA report is inspiration, generated from your answers by fixed design rules. It is not professional advice for your specific property.
+        Your home plan is general guidance, generated from your answers by fixed rules. Prices are approximate. It is not professional advice for your specific property.
         Always check your tenancy agreement before making changes to a rented home.
       </p>
 

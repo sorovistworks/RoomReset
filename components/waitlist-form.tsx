@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Check, LoaderCircle } from "lucide-react";
 import { loadSaved, readSource } from "@/lib/storage";
-import { STYLES, type StyleId } from "@/lib/taste-data";
+import type { StyleId } from "@/lib/taste-data";
 import { buttonClass } from "./ui";
 
 type State =
@@ -30,7 +30,6 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
   const field = `w-full min-h-12 rounded-full border px-5 text-[0.95rem] outline-none transition-colors ${
     dark ? "border-ivory/25 bg-ivory/5 text-ivory placeholder:text-ivory/50 focus:border-ivory" : "border-line bg-paper placeholder:text-ink-soft/70 focus:border-ink"
   }`;
-  const styleName = savedStyle && STYLES.find((s) => s.id === savedStyle)?.name;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -123,8 +122,8 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
           .
         </span>
       </label>
-      {styleName && (
-        <p className={`text-xs ${dark ? "text-ivory/65" : "text-ink-soft"}`}>Your Taste DNA style ({styleName}) will be saved with your sign-up so we can tailor your invite.</p>
+      {savedStyle && (
+        <p className={`text-xs ${dark ? "text-ivory/65" : "text-ink-soft"}`}>A style tag from your Taste DNA will be saved with your sign-up so we can tailor your invite.</p>
       )}
       <button type="submit" disabled={busy} className={buttonClass(dark ? "light" : "primary", "w-full sm:w-auto")}>
         {busy ? (

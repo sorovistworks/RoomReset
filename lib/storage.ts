@@ -1,6 +1,6 @@
-import { EMPTY_ANSWERS, isComplete, sanitizeAnswers, STYLES, type Answers, type StyleId } from "./taste-data";
+import { EMPTY_ANSWERS, isComplete, sanitizeAnswers, STEP_COUNT, STYLES, type Answers, type StyleId } from "./taste-data";
 
-// Browser-only, non-sensitive aesthetic preferences. Only the style id leaves the browser, and only on waitlist sign-up.
+// Browser-only quiz answers (taste, home and routine — no name or email). Only the style id leaves the browser, and only on waitlist sign-up.
 const KEY = "roomreset:taste:v1";
 const SOURCE_KEY = "roomreset:source";
 
@@ -17,7 +17,7 @@ export function loadSaved(): Saved | null {
     if (!raw) return null;
     const p = JSON.parse(raw);
     const answers = sanitizeAnswers(p?.answers);
-    const step = Number.isInteger(p?.step) ? Math.min(7, Math.max(0, p.step)) : 0;
+    const step = Number.isInteger(p?.step) ? Math.min(STEP_COUNT - 1, Math.max(0, p.step)) : 0;
     const primaryStyle = STYLES.some((st) => st.id === p?.primaryStyle) ? (p.primaryStyle as StyleId) : undefined;
     return { answers, step, completed: Boolean(p?.completed) && isComplete(answers), primaryStyle };
   } catch {

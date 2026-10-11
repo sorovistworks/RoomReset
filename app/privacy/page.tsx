@@ -19,8 +19,8 @@ export default function PrivacyPage() {
         browser&apos;s site data.
       </p>
       <p>
-        If you use &ldquo;Share my Taste DNA&rdquo;, your aesthetic answers (styles, colours, materials and so on) are encoded into the link you share. The
-        link contains no name, email or other personal details.
+        If you use &ldquo;Share my plan&rdquo;, your quiz answers (tastes, home size, floor, door and wall colours, weather, household, routine and budget band) are encoded into the
+        link you share, so anyone with the link can see them. The link contains no name, email or contact details.
       </p>
 
       <h2>Early-access list</h2>

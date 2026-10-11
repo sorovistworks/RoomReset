@@ -67,6 +67,25 @@ export function SwatchStrip({ colours, className = "h-3" }: { colours: string[];
   );
 }
 
+// Illustrative CSS room: [wall, rug, sofa, cushion, art, lamp, floor?, door?].
+export function MiniRoom({ colours, className = "" }: { colours: string[]; className?: string }) {
+  const [wall, rug, sofa, cushion, art, lamp, floor, door] = colours;
+  const t = "transition-colors duration-700";
+  return (
+    <div className={`relative overflow-hidden ${t} ${className}`} style={{ background: wall }} aria-hidden>
+      <div className={`absolute inset-x-0 bottom-0 h-[22%] ${floor ? "" : "bg-black/6"}`} style={floor ? { background: floor } : undefined} />
+      {door && <div className="absolute bottom-[22%] right-[2%] h-[58%] w-[8%] rounded-t-sm border-2 border-black/10" style={{ background: door }} />}
+      <div className={`absolute left-[14%] top-[16%] h-[30%] w-[22%] rounded-sm border-[6px] border-paper ${t}`} style={{ background: art }} />
+      <div className="absolute right-[16%] top-[30%] h-[44%] w-0.5 bg-black/30" />
+      <div className={`absolute right-[11%] top-[24%] h-[10%] w-[11%] rounded-t-full ${t}`} style={{ background: lamp }} />
+      <div className={`absolute bottom-[8%] left-1/2 h-[10%] w-[78%] -translate-x-1/2 rounded-[50%] ${t}`} style={{ background: rug }} />
+      <div className={`absolute bottom-[15%] left-[12%] h-[26%] w-[58%] rounded-t-[2.5rem] rounded-b-xl ${t}`} style={{ background: sofa }} />
+      <div className={`absolute bottom-[29%] left-[18%] h-[14%] w-[12%] rotate-[-8deg] rounded-xl ${t}`} style={{ background: cushion }} />
+      <div className={`absolute bottom-[29%] left-[46%] h-[13%] w-[11%] rotate-6 rounded-xl ${t}`} style={{ background: art }} />
+    </div>
+  );
+}
+
 export function SectionHeading({
   eyebrow,
   title,
