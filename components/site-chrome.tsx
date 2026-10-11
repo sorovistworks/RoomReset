@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { SITE } from "@/lib/site";
 import { buttonClass } from "./ui";
+import { Wordmark } from "./wordmark";
 
 const NAV = [
   { href: "/discover", label: "Taste DNA" },
@@ -10,13 +11,6 @@ const NAV = [
   { href: "/#early-access", label: "Early access" },
 ];
 
-export function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <Link href="/" className={`font-serif text-[1.65rem] leading-none tracking-tight ${className}`} aria-label="RoomReset home">
-      Room<span className="italic text-clay">Reset</span>
-    </Link>
-  );
-}
 
 export function SiteHeader() {
   return (
