@@ -11,6 +11,9 @@ const u = (id: string, alt: string, credit: string): Photo => ({
   credit,
 });
 
+// Shared with app/discover so its server-side preload matches the quiz images exactly.
+export const QUIZ_PHOTO_SIZES = "(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 46vw";
+
 export const PHOTOS = {
   hero: u("1788927742310-12a1742fad41", "A leafy plant beside a wooden chair against a warm terracotta wall", "Vincent Yap"),
   heroDetail: u("1772797583328-f83bc3f94f80", "A light living room with natural wood shelving and soft daylight", "Puscas Adryan"),
@@ -48,3 +51,11 @@ export const PHOTOS = {
   wickerChair: u("1758486561455-ebd0d3ba7423", "A woven wicker chair with slim metal legs", "Alina Bondar"),
   cushion: u("1615222599276-3d8149bc51ed", "A soft white throw pillow on a white sofa", "Kier in Sight Archives"),
 } satisfies Record<string, Photo>;
+
+// Not an Unsplash photo, so it stays out of PHOTOS (and the Unsplash credit list).
+// AI visualisation: PHOTOS.emptyRoom furnished with Higgsfield (GPT Image 2.5), Oct 2026, for the coming-soon concept only.
+export const RESET_VISUAL: Photo = {
+  src: "/images/room-reset-after.webp",
+  alt: "The same bright room furnished in warm linen and light wood: a linen sofa, round wooden coffee table, cane chair, striped cotton rug, floor lamp, potted fiddle-leaf fig and sage artwork leaning on a sideboard",
+  credit: "AI visualisation based on a photo by Salvo Media LLC",
+};

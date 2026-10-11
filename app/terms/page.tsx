@@ -43,6 +43,10 @@ export default function TermsPage() {
       <p>
         Photographs are from <a href="https://unsplash.com">Unsplash</a>, used under the Unsplash License. With thanks to: {credits.join(", ")}.
       </p>
+      <p>
+        The furnished room on the coming-soon page is an AI visualisation, made with Higgsfield from Salvo Media LLC&apos;s Unsplash photo of the same empty
+        room. It illustrates a future feature and is not a RoomReset result.
+      </p>
     </LegalPage>
   );
 }

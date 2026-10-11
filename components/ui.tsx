@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import { Fragment, type ComponentProps, type CSSProperties, type ReactNode } from "react";
 import type { Photo as PhotoData } from "@/lib/photos";
 
 type Variant = "primary" | "secondary" | "ghost" | "light";
@@ -43,16 +43,18 @@ export function Photo({
   className = "",
   imgClassName = "",
   preload,
+  eager,
 }: {
   photo: PhotoData;
   sizes: string;
   className?: string;
   imgClassName?: string;
   preload?: boolean;
+  eager?: boolean;
 }) {
   return (
     <div className={`${/\babsolute\b/.test(className) ? "" : "relative"} overflow-hidden bg-sand ${className}`}>
-      <Image src={photo.src} alt={photo.alt} fill sizes={sizes} preload={preload} className={`object-cover ${imgClassName}`} />
+      <Image src={photo.src} alt={photo.alt} fill sizes={sizes} preload={preload} loading={eager ? "eager" : undefined} fetchPriority={eager ? "high" : undefined} className={`object-cover ${imgClassName}`} />
     </div>
   );
 }
@@ -101,7 +103,28 @@ export function SectionHeading({
     <div className={`max-w-2xl ${className}`}>
       <Eyebrow>{eyebrow}</Eyebrow>
       <h2 className="display mt-4 text-4xl sm:text-5xl">{title}</h2>
-      {children && <div className="mt-5 text-base leading-relaxed text-ink-soft sm:text-lg">{children}</div>}
+      {children && <div data-reveal className="mt-5 text-base leading-relaxed text-ink-soft sm:text-lg">{children}</div>}
     </div>
+  );
+}
+
+// Words are pre-split on the server so the heading is complete without JS; the sr-only copy keeps one clean accessible name.
+export function SplitWords({ text, start = 0 }: { text: string; start?: number }) {
+  return (
+    <>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden data-split>
+        {text.split(" ").map((w, i) => (
+          <Fragment key={i}>
+            {i > 0 && " "}
+            <span className="-mb-[0.14em] inline-block overflow-hidden pb-[0.14em] align-top">
+              <span data-w className="inline-block" style={{ "--i": start + i } as CSSProperties}>
+                {w}
+              </span>
+            </span>
+          </Fragment>
+        ))}
+      </span>
+    </>
   );
 }
