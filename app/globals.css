@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), "Iowan Old Style", Georgia, serif;
+
+  --color-ivory: #f7f3ec;
+  --color-paper: #fcfaf6;
+  --color-sand: #eee7dc;
+  --color-line: #ddd3c4;
+  --color-taupe: #8a7f72;
+  --color-ink: #26231f;
+  --color-ink-soft: #5e564d;
+  --color-clay: #9a5232;
+  --color-terracotta: #b86b4b;
+  --color-olive: #5f6343;
+
+  --ease-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-ivory text-ink font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: #e8d5c4;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-clay);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+  .eyebrow {
+    @apply text-[0.7rem] font-medium uppercase tracking-[0.2em] text-ink-soft;
+  }
+  .display {
+    @apply font-serif font-normal leading-[1.02] tracking-[-0.015em] text-balance;
+  }
+  .prose-rr {
+    @apply max-w-2xl text-[0.98rem] leading-relaxed text-ink-soft;
+  }
+  .prose-rr h2 {
+    @apply mt-12 mb-3 font-serif text-3xl text-ink;
+  }
+  .prose-rr p,
+  .prose-rr ul {
+    @apply mb-4;
+  }
+  .prose-rr ul {
+    @apply list-disc pl-5 space-y-1.5;
+  }
+  .prose-rr a {
+    @apply text-clay underline underline-offset-4;
+  }
+}
+
+/* Restrained entrance motion */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.rise {
+  animation: rise 0.9s var(--ease-soft) both;
+}
+.settle {
+  animation: settle 1.6s var(--ease-soft) both;
+}
+.fade {
+  animation: fade 0.6s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Boldness slider */
+input[type="range"].rr-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 2.75rem;
+}
+input[type="range"].rr-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--color-line);
+}
+input[type="range"].rr-range::-moz-range-track {
+  height: 2px;
+  background: var(--color-line);
+}
+input[type="range"].rr-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -13px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  border: 6px solid var(--color-paper);
+  box-shadow: 0 0 0 1px var(--color-ink);
+  cursor: grab;
+}
+input[type="range"].rr-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  border: 6px solid var(--color-paper);
+  box-shadow: 0 0 0 1px var(--color-ink);
+  cursor: grab;
+}
