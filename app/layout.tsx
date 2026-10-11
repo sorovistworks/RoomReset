@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Instrument_Serif } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { SourceCapture } from "@/components/source-capture";
 import { SITE } from "@/lib/site";
 import "./globals.css";
+import { preconnect } from "react-dom";
 
-const sans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
-const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-instrument", display: "swap" });
+const sans = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
+// opsz axis: large headlines automatically get Fraunces' finer, high-contrast display cut.
+const serif = Fraunces({ subsets: ["latin"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-fraunces", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -19,6 +21,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#f7f3ec" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Every page shows Unsplash photos; open the connection while the HTML is still parsing.
+  preconnect("https://images.unsplash.com");
   return (
     <html lang="en-GB" className={`${sans.variable} ${serif.variable}`}>
       <body>

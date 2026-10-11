@@ -3,7 +3,7 @@ import { ArrowRight, Check, ImageUp, Lock } from "lucide-react";
 import { BudgetPlanner } from "@/components/budget-planner";
 import { ButtonLink, ComingSoon, Eyebrow, Photo, SectionHeading } from "@/components/ui";
 import { WaitlistForm } from "@/components/waitlist-form";
-import { PHOTOS } from "@/lib/photos";
+import { PHOTOS, RESET_VISUAL } from "@/lib/photos";
 import { ROOM_INPUTS } from "@/lib/room-inputs";
 
 export const metadata: Metadata = {
@@ -72,12 +72,12 @@ export default function ComingSoonPage() {
             </figure>
             <ArrowRight className="mx-auto size-6 rotate-90 text-clay md:rotate-0" aria-hidden />
             <figure>
-              <Photo photo={PHOTOS.livingNeutral} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[4/3] rounded-[1.75rem]" />
+              <Photo photo={RESET_VISUAL} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[4/3] rounded-[1.75rem]" />
               <figcaption className="mt-3 text-sm text-ink-soft">Your RoomReset</figcaption>
             </figure>
           </div>
           <p className="mt-6 rounded-2xl border border-line bg-paper px-5 py-3 text-xs leading-relaxed text-ink-soft">
-            Illustrative concept only: these are two different photographs, not an AI-generated result. AI makeovers are not available yet.
+            Illustrative concept only: the second image is an AI visualisation of the same room, made with a general image model for this preview. It is not a RoomReset makeover, and AI makeovers are not available yet.
           </p>
         </div>
       </section>

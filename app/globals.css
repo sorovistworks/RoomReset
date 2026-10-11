@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
 
   --color-ivory: #f7f3ec;
   --color-paper: #fcfaf6;
@@ -45,10 +45,10 @@
     @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
   }
   .eyebrow {
-    @apply text-[0.7rem] font-medium uppercase tracking-[0.2em] text-ink-soft;
+    @apply text-[0.7rem] font-medium uppercase tracking-[0.22em] text-ink-soft;
   }
   .display {
-    @apply font-serif font-normal leading-[1.02] tracking-[-0.015em] text-balance;
+    @apply font-serif font-[340] leading-[1.02] tracking-[-0.025em] text-balance;
   }
   .prose-rr {
     @apply max-w-2xl text-[0.98rem] leading-relaxed text-ink-soft;
@@ -154,4 +154,41 @@ input[type="range"].rr-range::-moz-range-thumb {
   border: 6px solid var(--color-paper);
   box-shadow: 0 0 0 1px var(--color-ink);
   cursor: grab;
+}
+
+/* Hero intro pre-hide: GSAP cancels this on mount. If JS never runs it still fades in, and <noscript> skips it. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-intro] {
+    animation: fade 0.6s 2.5s both;
+  }
+  /* Hero headline and photo animate from first paint in CSS, so they never wait on JS (keeps LCP early). */
+  [data-hero] h1 [data-w] {
+    animation: word-rise 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 60ms);
+  }
+  [data-arch] img {
+    animation: zoom-settle 2.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+@keyframes word-rise {
+  from {
+    transform: translateY(110%);
+  }
+}
+@keyframes zoom-settle {
+  from {
+    transform: scale(1.18);
+  }
+}
+
+/* Lenis (home page only) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
 }

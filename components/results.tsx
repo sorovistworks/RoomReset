@@ -381,7 +381,13 @@ function Rooms({ plan }: { plan: HomePlan }) {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-12 lg:grid-cols-12">
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          <BuyColumn title="Buy now" note="Needed from day one" items={room.buy.now} tone="now" />
+          <BuyColumn title="Buy later" note="Once you've lived in it" items={room.buy.later} tone="later" />
+          <BuyColumn title="Skip" note="Not worth it for you" items={room.buy.skip} tone="skip" />
+        </div>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <h3 className="eyebrow">Material priority</h3>
             <ol className="mt-5 divide-y divide-line border-y border-line">
@@ -415,11 +421,6 @@ function Rooms({ plan }: { plan: HomePlan }) {
           </div>
         )}
 
-        <div className="mt-14 grid gap-4 lg:grid-cols-3">
-          <BuyColumn title="Buy now" note="Needed from day one" items={room.buy.now} tone="now" />
-          <BuyColumn title="Buy later" note="Once you've lived in it" items={room.buy.later} tone="later" />
-          <BuyColumn title="Skip" note="Not worth it for you" items={room.buy.skip} tone="skip" />
-        </div>
       </div>
     </section>
   );

@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { freshProgress, loadSaved, saveProgress, type Saved } from "@/lib/storage";
 import { primaryStyle } from "@/lib/taste-engine";
+import { QUIZ_PHOTO_SIZES } from "@/lib/photos";
 import {
   BOLDNESS_LABELS,
   BUDGETS,
@@ -125,7 +126,10 @@ export function Questionnaire() {
 
   useEffect(() => {
     const saved = loadSaved() ?? freshProgress();
-    const q = Number(new URLSearchParams(location.search).get("step"));
+    const stepParam = new URLSearchParams(location.search).get("step");
+    // Finished visitors land on their plan; "Edit answers" passes ?step to reopen the quiz.
+    if (saved.completed && !stepParam) return router.replace("/results");
+    const q = Number(stepParam);
     if (Number.isInteger(q) && q >= 1 && q <= STEP_COUNT) saved.step = q - 1;
     setEditing(saved.completed);
     setS(saved);
@@ -225,14 +229,14 @@ export function Questionnaire() {
           <div className="mt-10">
             {step.key === "styles" && (
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-                {STYLES.map((st) => {
+                {STYLES.map((st, i) => {
                   const { on, dim } = optionState("styles", st.id);
                   const rank = a.styles.indexOf(st.id) + 1;
                   return (
                     <li key={st.id}>
                       <button type="button" aria-pressed={on} onClick={() => toggle("styles", st.id)} className={`group w-full text-left transition-opacity ${dim ? "opacity-45" : ""}`}>
                         <span className={`relative block overflow-hidden rounded-2xl ring-offset-4 ring-offset-ivory transition ${on ? "ring-2 ring-ink" : ""}`}>
-                          <Photo photo={st.photo} sizes="(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 46vw" className="aspect-4/5" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
+                          <Photo photo={st.photo} sizes={QUIZ_PHOTO_SIZES} eager={i < 5} className="aspect-4/5" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
                           <Badge on={on} label={rank ? String(rank) : undefined} />
                         </span>
                         <span className="mt-3 block text-sm leading-snug text-ink-soft">{st.caption}</span>
