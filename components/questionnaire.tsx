@@ -232,7 +232,7 @@ export function Questionnaire() {
                     <li key={st.id}>
                       <button type="button" aria-pressed={on} onClick={() => toggle("styles", st.id)} className={`group w-full text-left transition-opacity ${dim ? "opacity-45" : ""}`}>
                         <span className={`relative block overflow-hidden rounded-2xl ring-offset-4 ring-offset-ivory transition ${on ? "ring-2 ring-ink" : ""}`}>
-                          <Photo photo={st.photo} sizes="(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 46vw" className="aspect-[4/5]" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
+                          <Photo photo={st.photo} sizes="(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 46vw" className="aspect-4/5" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
                           <Badge on={on} label={rank ? String(rank) : undefined} />
                         </span>
                         <span className="mt-3 block text-sm leading-snug text-ink-soft">{st.caption}</span>
@@ -253,7 +253,7 @@ export function Questionnaire() {
                         type="button"
                         aria-pressed={on}
                         onClick={() => toggle("moods", m.id)}
-                        className={`relative flex aspect-[5/4] w-full flex-col justify-end overflow-hidden rounded-2xl p-5 text-left transition sm:aspect-[4/3] sm:p-6 ${
+                        className={`relative flex aspect-5/4 w-full flex-col justify-end overflow-hidden rounded-2xl p-5 text-left transition sm:aspect-4/3 sm:p-6 ${
                           on ? "ring-2 ring-ink ring-offset-4 ring-offset-ivory" : ""
                         } ${dim ? "opacity-45" : ""}`}
                         style={{ background: `linear-gradient(150deg, ${m.tint[0]} 20%, ${m.tint[1]} 130%)` }}
@@ -583,7 +583,7 @@ function Progress({ step }: { step: number }) {
 function Boldness({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-10">
-      <MiniRoom colours={BOLD_ROOMS[value - 1]} className="aspect-[16/10] rounded-3xl lg:aspect-[4/3]" />
+      <MiniRoom colours={BOLD_ROOMS[value - 1]} className="aspect-16/10 rounded-3xl lg:aspect-4/3" />
       <div>
         <p className="font-serif text-4xl sm:text-5xl" aria-live="polite">
           {BOLDNESS_LABELS[value - 1]}
@@ -621,7 +621,7 @@ function Skeleton() {
       <div className="mt-14 h-14 w-3/4 max-w-xl rounded-lg bg-sand" />
       <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-5">
         {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="aspect-[4/5] animate-pulse rounded-2xl bg-sand" />
+          <div key={i} className="aspect-4/5 animate-pulse rounded-2xl bg-sand" />
         ))}
       </div>
     </div>

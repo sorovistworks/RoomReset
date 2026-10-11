@@ -50,7 +50,7 @@ function EmptyState({ partial }: { partial: boolean }) {
           {partial ? "Continue my plan" : "Plan my home"} <ArrowRight className="size-4" aria-hidden />
         </ButtonLink>
       </div>
-      <Photo photo={PHOTOS.japandi} sizes="(min-width: 1024px) 40vw, 100vw" className="aspect-[4/5] max-h-[70vh] rounded-t-full rounded-b-[2rem]" />
+      <Photo photo={PHOTOS.japandi} sizes="(min-width: 1024px) 40vw, 100vw" className="aspect-4/5 max-h-[70vh] rounded-t-full rounded-b-4xl" />
     </section>
   );
 }
@@ -96,7 +96,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
           {!shared && <Actions answers={answers} plan={p} />}
         </div>
         <figure className="rise lg:col-span-5" style={{ animationDelay: "200ms" }}>
-          <MiniRoom colours={top.room} className="aspect-[4/3] rounded-[2rem]" />
+          <MiniRoom colours={top.room} className="aspect-4/3 rounded-4xl" />
           <figcaption className="mt-4 flex items-center justify-between gap-4 text-sm">
             <span>
               <span className="text-ink-soft">Your top palette · </span>
@@ -124,7 +124,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
           <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {p.palettes.slice(1).map((r, i) => (
               <li key={r.palette.id} className="overflow-hidden rounded-2xl border border-line bg-ivory">
-                <MiniRoom colours={r.room} className="aspect-[16/10]" />
+                <MiniRoom colours={r.room} className="aspect-16/10" />
                 <div className="p-5">
                   <div className="flex h-3 overflow-hidden rounded-full" aria-hidden>
                     {r.colours.map((c) => (
@@ -246,8 +246,8 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
       {/* Future */}
       <section className="py-20 sm:py-28" aria-labelledby="future">
         <div className="wrap grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="relative overflow-hidden rounded-[2rem]">
-            <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 1024px) 45vw, 100vw" className="aspect-[4/3]" imgClassName="scale-105 blur-[3px] grayscale-[35%]" />
+          <div className="relative overflow-hidden rounded-4xl">
+            <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 1024px) 45vw, 100vw" className="aspect-4/3" imgClassName="scale-105 blur-[3px] grayscale-[35%]" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink/35 p-6 text-center text-ivory">
               <span className="flex size-14 items-center justify-center rounded-full border border-ivory/60 bg-ink/40">
                 <Lock className="size-5" aria-hidden />
@@ -279,7 +279,7 @@ function PaletteHero({ r }: { r: RankedPalette }) {
   const roles = ["Walls · ≈60%", "Large pieces · ≈30%", "Wood & depth", "Accent", "Accent"];
   return (
     <div className="mt-12 grid overflow-hidden rounded-3xl border border-line bg-ivory lg:grid-cols-[1fr_1.2fr]">
-      <MiniRoom colours={r.room} className="aspect-[4/3] lg:aspect-auto" />
+      <MiniRoom colours={r.room} className="aspect-4/3 lg:aspect-auto" />
       <div className="p-6 sm:p-10">
         <p className="eyebrow">01 · Best match</p>
         <h3 className="display mt-3 text-4xl">{r.palette.name}</h3>
@@ -318,7 +318,7 @@ function SwatchChip({ name, hex, role }: { name: string; hex: string; role: stri
   }
   return (
     <li>
-      <div className="aspect-[3/4] rounded-xl border border-black/5" style={{ background: hex }} />
+      <div className="aspect-3/4 rounded-xl border border-black/5" style={{ background: hex }} />
       <p className="mt-2 text-[0.62rem] uppercase leading-tight tracking-[0.12em] text-ink-soft">{role}</p>
       <p className="mt-1 text-sm leading-tight">{name}</p>
       <button type="button" onClick={copy} className="mt-0.5 inline-flex items-center gap-1 font-mono text-[0.68rem] text-ink-soft hover:text-ink" aria-label={`Copy ${hex}`}>
