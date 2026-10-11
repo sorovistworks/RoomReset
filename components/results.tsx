@@ -567,7 +567,7 @@ function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
   }, [confirmReset]);
 
   async function share() {
-    const url = `${location.origin}/results?d=${encodeAnswers(answers)}`;
+    const url = `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH}/results?d=${encodeAnswers(answers)}`;
     const text = `My RoomReset home plan — top palette: ${plan.palettes[0].palette.name}. Plan yours:`;
     try {
       if (navigator.share) return await navigator.share({ title: "My home plan", text, url });
@@ -590,7 +590,7 @@ function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
   function reset() {
     if (!confirmReset) return setConfirmReset(true);
     clearSaved();
-    location.assign("/discover");
+    location.assign(`${process.env.NEXT_PUBLIC_BASE_PATH}/discover`);
   }
 
   return (
