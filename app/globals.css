@@ -68,6 +68,47 @@
   }
 }
 
+/* Image annotations: full labels on roomy images; numbered markers + a readable
+   external key on smaller screens. Never bake tiny text into the photographs. */
+.room-pin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.room-pin-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #fcfaf6;
+  border-radius: 50%;
+  background: #26231f;
+  color: #fcfaf6;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 12px #26231f40;
+}
+.room-pin-after .room-pin-number { background: #5f6343; }
+.room-pin-label {
+  display: none;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #fcfaf6;
+  color: #26231f;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px #26231f20;
+}
+@media (min-width: 640px) and (max-width: 1023px), (min-width: 1200px) {
+  .room-pin-label { display: block; }
+}
+
 /* Restrained entrance motion */
 @keyframes rise {
   from {

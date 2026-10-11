@@ -13,6 +13,7 @@ Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · lucide-react · Zod 
 | Route | What it does |
 | --- | --- |
 | `/` | Landing page |
+| `/resources` | Free in-page room checklist; ebook, guide and template clearly marked coming soon. Links to Taste DNA and the existing budget planner. |
 | `/discover` | 8-step visual questionnaire. Progress is saved in `localStorage`; `?step=N` jumps to a question. |
 | `/results` | Personalised Taste DNA report. `?d=…` opens a read-only shared profile. |
 | `/coming-soon` | Honest previews of future features, plus a working budget guide |
@@ -61,5 +62,6 @@ The output is standard Next.js: static pages plus one route handler. It works on
 
 - **Taste DNA engine:** `lib/taste-engine.ts` is deterministic weighted scoring. Disliked colour families are hard exclusions, the Depth tone always reaches at least 4.5:1 contrast with the Foundation, accents are softened to match boldness, and conflicting answers produce explicit "how we balanced your choices" notes.
 - **Imagery:** Unsplash License photos (no Unsplash+ images). Credits are listed at `/terms#image-credits`.
+- **Rental-room concepts:** Locally served, responsive WebP before/after images, made with built-in ImageGen for this site. Both are labelled AI concepts, never customer transformations. The image-led study uses CSS markers and readable mobile keys, with no additional client JavaScript or image-generation service. See [`docs/INDIAN-RENTER-DESIGN.md`](docs/INDIAN-RENTER-DESIGN.md) for research and the exact prompts.
 - **Rate limiting:** in memory and per instance, so it isn't shared between servers. Add Cloudflare rate-limiting rules or Turnstile if spam appears.
 - **Future work:** see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

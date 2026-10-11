@@ -1,8 +1,8 @@
 export const SITE = {
   name: "RoomReset",
-  tagline: "Your room. Your taste. A whole new feeling.",
+  tagline: "Same room. More you.",
   description:
-    "Discover your personal interior-design Taste DNA in three minutes — free, no sign-up. Soon: rental-friendly AI room makeovers that feel completely you.",
+    "Discover your Taste DNA for free. Practical resources and renter-friendly styling ideas for Indian bedrooms, with personalised AI room makeovers coming soon.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   // shortcut: placeholder on a reserved .example domain until NEXT_PUBLIC_CONTACT_EMAIL is set for launch.
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "hello@roomreset.example",

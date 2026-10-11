@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Menu } from "lucide-react";
 import { SITE } from "@/lib/site";
 import { buttonClass } from "./ui";
+import { MobileNav } from "./mobile-nav";
 
 const NAV = [
-  { href: "/discover", label: "Taste DNA" },
+  { href: "/#room-study", label: "The room reset" },
+  { href: "/resources", label: "Resources" },
   { href: "/results", label: "My results" },
   { href: "/coming-soon", label: "Coming soon" },
-  { href: "/#early-access", label: "Early access" },
 ];
 
 export function Wordmark({ className = "" }: { className?: string }) {
@@ -36,22 +36,7 @@ export function SiteHeader() {
             Discover my taste
           </Link>
         </nav>
-        {/* No-JS mobile menu */}
-        <details className="group relative md:hidden">
-          <summary className="flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-line" aria-label="Open menu">
-            <Menu className="size-5" aria-hidden />
-          </summary>
-          <nav aria-label="Mobile" className="absolute right-0 top-14 w-64 rounded-2xl border border-line bg-paper p-3 shadow-[0_20px_60px_-20px_rgba(38,35,31,0.25)]">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="block rounded-xl px-4 py-3 text-[0.95rem] hover:bg-sand">
-                {n.label}
-              </Link>
-            ))}
-            <Link href="/discover" className={buttonClass("primary", "mt-2 w-full")}>
-              Discover my taste
-            </Link>
-          </nav>
-        </details>
+        <MobileNav links={NAV} />
       </div>
     </header>
   );
@@ -64,10 +49,10 @@ export function SiteFooter() {
         <div className="max-w-sm">
           <Wordmark />
           <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-            Personal interior design for people who rent. Discover your Taste DNA today — rental-friendly makeovers are on the way.
+            Your taste. Your rented room. Small changes that feel like home.
           </p>
           <p className="mt-6 text-xs leading-relaxed text-ink-soft">
-            Your Taste DNA answers stay in this browser. We only store your email if you join early access.
+            Taste DNA answers stay in this browser. Early access collects your email, optional name, source and style if available.
           </p>
         </div>
         <FooterCol
@@ -75,6 +60,7 @@ export function SiteFooter() {
           links={[
             ["/discover", "Discover your taste"],
             ["/results", "Your Taste DNA"],
+            ["/resources", "Resources"],
             ["/coming-soon", "What's coming"],
             ["/#early-access", "Early access"],
           ]}
@@ -91,7 +77,7 @@ export function SiteFooter() {
       <div className="wrap flex flex-col gap-2 border-t border-line py-6 text-xs text-ink-soft sm:flex-row sm:justify-between">
         <p>© {new Date().getFullYear()} {SITE.name}. All rights reserved.</p>
         <p>
-          Photography by Unsplash contributors — <Link href="/terms#image-credits" className="underline underline-offset-4">credits</Link>
+          Concept imagery &amp; photo <Link href="/terms#image-credits" className="underline underline-offset-4">credits</Link>
         </p>
       </div>
     </footer>

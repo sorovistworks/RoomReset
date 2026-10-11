@@ -26,8 +26,8 @@ export default function TermsPage() {
 
       <h2>Imagery</h2>
       <p>
-        Photographs are inspiration and illustrative examples only. They are not transformations created by RoomReset. Prices shown in previews are
-        illustrative, not offers.
+        The rental-bedroom before/after pair is an AI-generated styling concept created for this website, not customer photography or proof of the
+        unreleased makeover service. Other photographs are style inspiration. Any example budget is illustrative, not a quote or offer.
       </p>
 
       <h2>Fair use</h2>
@@ -40,6 +40,7 @@ export default function TermsPage() {
       </p>
 
       <h2 id="image-credits">Image credits</h2>
+      <p>The rental-bedroom concepts were generated with OpenAI ImageGen and edited to retain the room layout and existing furniture. The same concepts may appear in more than one section.</p>
       <p>
         Photographs are from <a href="https://unsplash.com">Unsplash</a>, used under the Unsplash License. With thanks to: {credits.join(", ")}.
       </p>

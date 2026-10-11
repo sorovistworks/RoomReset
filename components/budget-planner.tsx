@@ -13,7 +13,7 @@ const BASE = [
 const FOCUS = [
   { id: "textiles", label: "Make it cozier" },
   { id: "lighting", label: "Better lighting" },
-  { id: "furniture", label: "A statement piece" },
+  { id: "furniture", label: "More useful storage" },
 ];
 
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
@@ -28,19 +28,19 @@ export function allocate(budget: number, focus: string) {
 }
 
 export function BudgetPlanner() {
-  const [budget, setBudget] = useState(25000);
+  const [budget, setBudget] = useState(10000);
   const [focus, setFocus] = useState("textiles");
   const rows = allocate(budget, focus);
 
   return (
     <div className="grid gap-10 rounded-[2rem] border border-line bg-paper p-6 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
       <div>
-        <label htmlFor="budget" className="eyebrow">
+        <label htmlFor="budget-amount" className="eyebrow">
           Your total budget
         </label>
         <p className="mt-3 font-serif text-5xl tabular-nums">{inr.format(budget)}</p>
         <input
-          id="budget"
+          id="budget-amount"
           type="range"
           min={5000}
           max={150000}
