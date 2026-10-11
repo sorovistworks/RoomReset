@@ -100,6 +100,11 @@ export function HomeMotion() {
           document.removeEventListener("visibilitychange", onVisibility);
         };
       });
+
+      // Arriving via /#early-access or /#beyond: ScrollTrigger's first measure resets the scroll the browser started,
+      // so jump to the anchor once it's set up (instant here: Lenis or reduced motion turn smooth scrolling off).
+      const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (target) requestAnimationFrame(() => target.scrollIntoView());
     });
     return () => {
       cancelled = true;
