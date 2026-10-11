@@ -247,7 +247,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
       <section className="py-20 sm:py-28" aria-labelledby="future">
         <div className="wrap grid gap-12 lg:grid-cols-2 lg:items-center">
           <div className="relative overflow-hidden rounded-4xl">
-            <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 1024px) 45vw, 100vw" className="aspect-4/3" imgClassName="scale-105 blur-[3px] grayscale-[35%]" />
+            <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 1024px) 45vw, 100vw" className="aspect-4/3" imgClassName="scale-105 blur-[3px] grayscale-35" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink/35 p-6 text-center text-ivory">
               <span className="flex size-14 items-center justify-center rounded-full border border-ivory/60 bg-ink/40">
                 <Lock className="size-5" aria-hidden />

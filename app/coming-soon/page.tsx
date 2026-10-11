@@ -67,12 +67,12 @@ export default function ComingSoonPage() {
           </div>
           <div className="mt-14 grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
             <figure>
-              <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[4/3] rounded-[1.75rem]" />
+              <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-4/3 rounded-[1.75rem]" />
               <figcaption className="mt-3 text-sm text-ink-soft">Your room today</figcaption>
             </figure>
             <ArrowRight className="mx-auto size-6 rotate-90 text-clay md:rotate-0" aria-hidden />
             <figure>
-              <Photo photo={RESET_VISUAL} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-[4/3] rounded-[1.75rem]" />
+              <Photo photo={RESET_VISUAL} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-4/3 rounded-[1.75rem]" />
               <figcaption className="mt-3 text-sm text-ink-soft">Your RoomReset</figcaption>
             </figure>
           </div>
@@ -133,7 +133,7 @@ export default function ComingSoonPage() {
         </div>
         <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {PRODUCTS.map((p) => (
-            <li key={p.name} className="flex flex-col overflow-hidden rounded-[1.5rem] border border-line bg-paper">
+            <li key={p.name} className="flex flex-col overflow-hidden rounded-3xl border border-line bg-paper">
               <Photo photo={p.photo} sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 100vw" className="aspect-square" />
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-baseline justify-between gap-3">
@@ -224,7 +224,7 @@ export default function ComingSoonPage() {
               Discover my taste <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
           </div>
-          <div className="rounded-[2rem] border border-ivory/15 p-7 sm:p-10">
+          <div className="rounded-4xl border border-ivory/15 p-7 sm:p-10">
             <WaitlistForm tone="dark" />
           </div>
         </div>

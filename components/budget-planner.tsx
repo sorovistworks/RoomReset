@@ -33,7 +33,7 @@ export function BudgetPlanner() {
   const rows = allocate(budget, focus);
 
   return (
-    <div className="grid gap-10 rounded-[2rem] border border-line bg-paper p-6 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
+    <div className="grid gap-10 rounded-4xl border border-line bg-paper p-6 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
       <div>
         <label htmlFor="budget" className="eyebrow">
           Your total budget

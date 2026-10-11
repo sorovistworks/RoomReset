@@ -1,0 +1,3 @@
+#!/bin/sh
+# Block commits with non-canonical Tailwind classes (fix with: npm run lint:classes -- --fix).
+npm run --silent lint:classes
