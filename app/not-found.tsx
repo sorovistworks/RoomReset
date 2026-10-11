@@ -18,7 +18,7 @@ export default function NotFound() {
           </ButtonLink>
         </div>
       </div>
-      <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 1024px) 45vw, 100vw" className="aspect-[4/3] rounded-[2rem]" />
+      <Photo photo={PHOTOS.emptyRoom} sizes="(min-width: 1024px) 45vw, 100vw" className="aspect-4/3 rounded-4xl" />
     </section>
   );
 }

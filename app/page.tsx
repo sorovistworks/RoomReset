@@ -198,8 +198,8 @@ export default function Home() {
         <div className="mt-14 grid grid-cols-2 gap-4 md:grid-cols-12 md:gap-5">
           {[
             { p: PHOTOS.bedroomStone, label: "Stone & linen bedroom", cls: "col-span-2 md:col-span-7 aspect-4/3 md:aspect-auto md:row-span-2" },
-            { p: PHOTOS.livingNeutral, label: "Natural living room", cls: "md:col-span-5 aspect-4/5 md:aspect-[16/10]" },
-            { p: PHOTOS.diningSunlit, label: "Sunlit dining corner", cls: "md:col-span-5 aspect-4/5 md:aspect-[16/10]" },
+            { p: PHOTOS.livingNeutral, label: "Natural living room", cls: "md:col-span-5 aspect-4/5 md:aspect-16/10" },
+            { p: PHOTOS.diningSunlit, label: "Sunlit dining corner", cls: "md:col-span-5 aspect-4/5 md:aspect-16/10" },
           ].map(({ p, label, cls }) => (
             <figure key={label} data-reveal className={`group relative overflow-hidden rounded-[1.75rem] ${cls}`}>
               <Photo photo={p} sizes="(min-width: 768px) 50vw, 100vw" className="parallax absolute inset-x-0 inset-y-[-8%]" imgClassName="transition-transform duration-[1.6s] ease-out group-hover:scale-[1.03]" />

@@ -117,7 +117,7 @@ export function SplitWords({ text, start = 0 }: { text: string; start?: number }
         {text.split(" ").map((w, i) => (
           <Fragment key={i}>
             {i > 0 && " "}
-            <span className="-mb-[0.14em] inline-block overflow-hidden pb-[0.14em] align-top">
+            <span className="mb-[-0.14em] inline-block overflow-hidden pb-[0.14em] align-top">
               <span data-w className="inline-block" style={{ "--i": start + i } as CSSProperties}>
                 {w}
               </span>

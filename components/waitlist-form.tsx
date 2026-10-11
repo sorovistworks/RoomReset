@@ -107,7 +107,7 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
         </label>
       </div>
       {/* Honeypot: hidden from people and assistive tech, tempting to bots */}
-      <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+      <div aria-hidden className="absolute left-[-9999px] h-px w-px overflow-hidden">
         <label>
           Company <input name="company" tabIndex={-1} autoComplete="off" />
         </label>
