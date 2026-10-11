@@ -140,7 +140,7 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
         {state.kind === "unconfigured" && (
           <p className={dark ? "text-ivory/80" : "text-ink-soft"}>
             {process.env.NODE_ENV === "development"
-              ? "Dev setup: the waitlist isn't connected. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env.local (see README). Nothing was saved."
+              ? "Dev setup: the waitlist isn't connected. Add SUPABASE_URL and SUPABASE_SECRET_KEY to .env.local (see README). Nothing was saved."
               : "Early-access sign-ups open very soon — nothing was saved yet. Please check back shortly."}
           </p>
         )}

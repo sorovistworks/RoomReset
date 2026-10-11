@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { insertWaitlist, rateLimited, waitlistSchema } from "./waitlist.ts";
 
 const valid = { email: "  Ada@Example.COM ", firstName: "Ada<b>", consent: true, company: "", elapsedMs: 4000, styleId: "japandi" };
-const env = { SUPABASE_URL: "https://demo.supabase.co/", SUPABASE_ANON_KEY: "sb_publishable_test" };
+const env = { SUPABASE_URL: "https://demo.supabase.co/", SUPABASE_SECRET_KEY: "sb_secret_test" };
 
 test("schema normalises and sanitises input", () => {
   const r = waitlistSchema.parse(valid);

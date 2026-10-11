@@ -32,6 +32,9 @@ jobs:
         env:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_SITE_URL: https://sorovistworks.github.io/RoomReset
+          # Country votes go live once these repository variables are set (public values by design).
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
       # Next's static export nests prefetch payloads (__next.x/__PAGE__.txt) but the client requests __next.x.__PAGE__.txt.
       - run: find out -path '*/__next.*/__PAGE__.txt' | while read f; do cp "$f" "${f%/__PAGE__.txt}.__PAGE__.txt"; done
       - uses: actions/upload-pages-artifact@v3

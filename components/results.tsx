@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, ClipboardList, Copy, Lock, Pencil, RotateCcw, Share2, X } from "lucide-react";
+import { ArrowRight, Check, ClipboardList, Copy, Globe, Lock, Pencil, RotateCcw, Share2, X } from "lucide-react";
 import { PHOTOS } from "@/lib/photos";
 import { clearSaved, loadSaved, saveProgress } from "@/lib/storage";
 import { buildHomePlan, type HomePlan, type Item, type RankedPalette } from "@/lib/home-plan";
@@ -602,6 +602,9 @@ function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
         <button type="button" onClick={copyChecklist} className={buttonClass("secondary", "px-5")}>
           <ClipboardList className="size-4" aria-hidden /> Copy checklist
         </button>
+        <Link href="/#beyond" className={buttonClass("secondary", "px-5")}>
+          <Globe className="size-4" aria-hidden /> Not in India? Vote for your country
+        </Link>
         <Link href="/discover?step=1" className={buttonClass("ghost", "")}>
           <Pencil className="size-4" aria-hidden /> Edit answers
         </Link>

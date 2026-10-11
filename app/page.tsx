@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Banknote, KeyRound, ListChecks, ShoppingBag, SlidersHorizontal, Sparkle } from "lucide-react";
 import { buttonClass, ButtonLink, ComingSoon, Eyebrow, MiniRoom, Photo, SectionHeading, SplitWords, SwatchStrip } from "@/components/ui";
 import { HomeMotion } from "@/components/home-motion";
+import { CountryVote } from "@/components/country-vote";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { PHOTOS } from "@/lib/photos";
 import { buildHomePlan } from "@/lib/home-plan";
@@ -244,6 +245,21 @@ export default function Home() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* Country votes */}
+      <section className="bg-paper py-24 sm:py-32" aria-labelledby="beyond">
+        <div className="wrap">
+          <SectionHeading eyebrow="Beyond India" title={<span id="beyond" className="scroll-mt-28"><SplitWords text="Not in India? Vote to bring RoomReset to you." /></span>}>
+            <p>
+              Today every plan is tuned for Indian homes: the weather, renting rules, Vastu, local materials and prices. Tell us where you live, and the
+              votes will decide where we go next.
+            </p>
+          </SectionHeading>
+          <div className="mt-14">
+            <CountryVote />
+          </div>
         </div>
       </section>
 
