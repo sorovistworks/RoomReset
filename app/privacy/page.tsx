@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Privacy policy" };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage eyebrow="Privacy" title="Your privacy, in plain language." updated="11 October 2026">
+    <LegalPage eyebrow="Privacy" title="Your privacy, in plain language." updated="12 October 2026">
       <p>
         RoomReset is a pre-launch product. We collect as little as possible, and we never sell your data. This policy explains what we collect, why, and the
         choices you have.
@@ -19,8 +19,10 @@ export default function PrivacyPage() {
         browser&apos;s site data.
       </p>
       <p>
-        If you use &ldquo;Share my plan&rdquo;, your quiz answers (tastes, home size, floor, door and wall colours, weather, household, routine and budget band) are encoded into the
-        link you share, so anyone with the link can see them. The link contains no name, email or contact details.
+        If you use &ldquo;Share my plan&rdquo;, your quiz answers are encoded into the part of the link after <code>#</code>. This includes tastes, home and fixture details,
+        household composition, child age groups, pet types, accessibility or respiratory needs, domestic-help arrangements, routine, possessions and exact budget.
+        Encoding is not encryption: anyone who receives the link can open and read the plan and recover those answers. The link contains no name, email or contact details,
+        and RoomReset does not upload the answer payload when it creates the link.
       </p>
 
       <h2>Early-access list</h2>

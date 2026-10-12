@@ -12,21 +12,27 @@ import type { Hand } from "@/lib/home-data";
 import { buttonClass, ButtonLink, Eyebrow, MiniRoom, Photo } from "./ui";
 import { WaitlistForm } from "./waitlist-form";
 
-type View = { kind: "loading" } | { kind: "empty" } | { kind: "partial"; step: number } | { kind: "ready"; answers: Answers; shared: boolean };
+type View = { kind: "loading" } | { kind: "empty" } | { kind: "partial"; step: number } | { kind: "invalid-share" } | { kind: "ready"; answers: Answers; shared: boolean };
 
 const BUDGET_COLOURS = ["#5C4033", "#B86B4B", "#B5BFA4", "#C19A6B", "#6F7148", "#8C6A55", "#D4B48C"];
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 // ₹2.2 lakh / ₹85k — short enough to read inside a sentence.
 const short = (n: number) => (n >= 100_000 ? `₹${(n / 100_000).toFixed(1).replace(/\.0$/, "")} lakh` : `₹${Math.round(n / 1000)}k`);
 const span = ([lo, hi]: [number, number]) => (lo >= 100_000 ? `₹${(lo / 100_000).toFixed(1).replace(/\.0$/, "")}–${short(hi).slice(1)}` : `${short(lo)}–${short(hi).slice(1)}`);
+const itemLabel = (item: Item) => `${item.name}${(item.quantity ?? 1) > 1 ? ` × ${item.quantity}` : ""}`;
 
 export function Results() {
   const [view, setView] = useState<View>({ kind: "loading" });
 
   useEffect(() => {
-    const d = new URLSearchParams(location.search).get("d");
-    const shared = d ? decodeAnswers(d) : null;
-    if (shared && isComplete(shared)) return setView({ kind: "ready", answers: shared, shared: true });
+    const query = new URLSearchParams(location.search);
+    const fragment = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const d = fragment.get("d") ?? query.get("d");
+    if (d !== null) {
+      const shared = decodeAnswers(d);
+      if (!shared || !isComplete(shared)) return setView({ kind: "invalid-share" });
+      return setView({ kind: "ready", answers: shared, shared: fragment.get("local") !== "1" });
+    }
     const saved = loadSaved();
     if (saved?.completed) return setView({ kind: "ready", answers: saved.answers, shared: false });
     if (saved && saved.answers.styles.length) return setView({ kind: "partial", step: saved.step });
@@ -34,23 +40,25 @@ export function Results() {
   }, []);
 
   if (view.kind === "loading") return <div className="wrap min-h-[60vh] py-24" aria-busy="true" aria-label="Loading your plan" />;
-  if (view.kind === "empty" || view.kind === "partial") return <EmptyState partial={view.kind === "partial"} />;
+  if (view.kind === "empty" || view.kind === "partial" || view.kind === "invalid-share") return <EmptyState partial={view.kind === "partial"} invalidShare={view.kind === "invalid-share"} />;
   return <Report answers={view.answers} shared={view.shared} />;
 }
 
-function EmptyState({ partial }: { partial: boolean }) {
+function EmptyState({ partial, invalidShare = false }: { partial: boolean; invalidShare?: boolean }) {
   return (
     <section className="wrap grid min-h-[70vh] items-center gap-12 py-20 lg:grid-cols-2">
       <div>
         <Eyebrow>Your home plan</Eyebrow>
-        <h1 className="display mt-5 text-5xl sm:text-6xl">{partial ? "You're part-way there." : "Your plan will live here."}</h1>
+        <h1 className="display mt-5 text-5xl sm:text-6xl">{invalidShare ? "This shared link is incomplete." : partial ? "You're part-way there." : "Your plan will live here."}</h1>
         <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-soft">
-          {partial
+          {invalidShare
+            ? "The answer payload is missing, damaged or from an incompatible version. We have not substituted a different plan from this browser."
+            : partial
             ? "Your answers are saved in this browser. Pick up where you left off — it only takes a couple more minutes."
             : "Answer thirteen quick questions and get your top palettes, a material list, what to buy or skip, and a plan for every room. Free, no sign-up."}
         </p>
         <ButtonLink href="/discover" className="mt-10">
-          {partial ? "Continue my plan" : "Plan my home"} <ArrowRight className="size-4" aria-hidden />
+          {invalidShare ? "Create my own plan" : partial ? "Continue my plan" : "Plan my home"} <ArrowRight className="size-4" aria-hidden />
         </ButtonLink>
       </div>
       <Photo photo={PHOTOS.japandi} sizes="(min-width: 1024px) 40vw, 100vw" className="aspect-4/5 max-h-[70vh] rounded-t-full rounded-b-4xl" />
@@ -113,6 +121,20 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
           </figcaption>
         </figure>
       </header>
+
+      {p.constraints.length > 0 && (
+        <section className="wrap pb-16" aria-labelledby="constraints">
+          <div className="rounded-3xl border border-clay/35 bg-[#f7e8df] p-6 sm:p-8">
+            <Eyebrow>Confirm before you buy</Eyebrow>
+            <h2 id="constraints" className="mt-3 font-serif text-3xl">The quiz cannot safely infer these details.</h2>
+            <ul className="mt-5 space-y-3 text-sm leading-relaxed text-ink-soft">
+              {p.constraints.map((constraint) => (
+                <li key={constraint} className="flex gap-3"><span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-clay" />{constraint}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* 1. Palettes */}
       <section className="bg-paper py-20 sm:py-28" aria-labelledby="palettes">
@@ -214,15 +236,15 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
           <div className="lg:col-span-5">
             <Eyebrow>Your budget, split by room</Eyebrow>
             <h2 id="budget" className="display mt-4 text-4xl">
-              About {inr.format(p.budget.total)} in all.
+              A ceiling of {inr.format(p.budget.total)}.
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-ink-soft">A rough starting split for “{p.budget.label}”, including the appliances that live in each room.</p>
+            <p className="mt-4 text-sm leading-relaxed text-ink-soft">A cost-weighted starting split for “{p.budget.label}”, using the exact ceiling you entered.</p>
             <p className="mt-4 leading-relaxed">
               {p.budget.fit === "fits"
-                ? `Your buy-now list comes to about ${span(p.budget.cost.now)}, so it fits, with roughly ${short(p.budget.total - p.budget.cost.now[1])} left for months one to three (${span(p.budget.cost.later)}).`
+                ? `Your revised buy-now list is about ${span(p.budget.cost.now)}. It stays under the ceiling at the top of the estimate; later items add ${span(p.budget.cost.later)}.`
                 : p.budget.fit === "stretch"
-                  ? `Your buy-now list runs ${span(p.budget.cost.now)}. It fits ${short(p.budget.total)} if you choose the lower-priced options; months one to three add ${span(p.budget.cost.later)}.`
-                  : `Your buy-now list runs ${span(p.budget.cost.now)}, more than ${short(p.budget.total)}. Months one to three add ${span(p.budget.cost.later)}.`}
+                  ? `Your essential buy-now range is ${span(p.budget.cost.now)}. Only its lower end fits ${short(p.budget.total)}, so get written quotes before ordering; later items add ${span(p.budget.cost.later)}.`
+                  : `The remaining buy-now essentials run ${span(p.budget.cost.now)}, above ${short(p.budget.total)}. No feasible shopping plan exists at this ceiling yet.`}
             </p>
           </div>
           <div className="lg:col-span-7">
@@ -249,12 +271,12 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
           <div className="grid gap-10 border-t border-line pt-12 lg:grid-cols-12">
             {p.budget.postpone.length > 0 && (
               <div className="lg:col-span-4">
-                <h3 className="eyebrow">If you need to trim</h3>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">These are the biggest buy-now items that aren&apos;t day-one essentials. Move them to later first.</p>
+                <h3 className="eyebrow">Moved to later</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-soft">The engine moved these non-essential purchases out of the immediate list until its upper estimate fit your ceiling.</p>
                 <ul className="mt-5 divide-y divide-line border-y border-line">
                   {p.budget.postpone.map((i) => (
                     <li key={i.name} className="flex items-baseline justify-between gap-4 py-3 text-sm">
-                      <span>{i.name}</span>
+                      <span>{itemLabel(i)}</span>
                       <span className="shrink-0 tabular-nums text-ink-soft">{i.cost}</span>
                     </li>
                   ))}
@@ -279,14 +301,14 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
                 ) : null;
               })}
             </div>
-            <p className="text-xs text-ink-soft lg:col-span-12">Totals count one of each item; fans and curtains are priced per piece.</p>
+            <p className="text-xs text-ink-soft lg:col-span-12">Ranges remain estimates. Known quantities are multiplied, but the quiz does not ask for window counts, so each per-window curtain line is counted once. Replace installation, delivery and unknown quantities with written quotes.</p>
           </div>
         </div>
       </section>
 
       <p className="wrap pt-10 text-xs leading-relaxed text-ink-soft">
-        Prices are approximate Indian market ranges as of October 2026 and vary by city and brand. This is general guidance — check with your landlord or
-        society, and use a qualified professional for electrical, plumbing and structural work.
+        Prices are illustrative Indian market ranges, not live quotes, and vary by city, scope and brand. This is general guidance, not a medical or accessibility
+        assessment — check permissions and use qualified professionals for electrical, plumbing, structural and individual accessibility work.
       </p>
 
       {/* Future */}
@@ -322,7 +344,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
 }
 
 function PaletteHero({ r }: { r: RankedPalette }) {
-  const roles = ["Walls · ≈60%", "Large pieces · ≈30%", "Wood & depth", "Accent", "Accent"];
+  const roles = [r.wallsFixed ? "Palette foundation · walls stay" : "Walls · ≈60%", "Large pieces · ≈30%", "Wood & depth", "Accent", "Accent"];
   return (
     <div className="mt-12 grid overflow-hidden rounded-3xl border border-line bg-ivory lg:grid-cols-[1fr_1.2fr]">
       <MiniRoom colours={r.room} className="aspect-4/3 lg:aspect-auto" />
@@ -528,7 +550,7 @@ function BuyColumn({ title, note, items, tone }: { title: string; note: string; 
           {items.map((it) => (
             <li key={it.name} className="py-4">
               <div className="flex items-baseline justify-between gap-3">
-                <p className={`font-medium ${tone === "skip" ? "line-through decoration-clay/50" : ""}`}>{it.name}</p>
+                <p className={`font-medium ${tone === "skip" ? "line-through decoration-clay/50" : ""}`}>{itemLabel(it)}</p>
                 <span className={`shrink-0 text-xs tabular-nums ${soft}`}>{it.cost}</span>
               </div>
               <p className={`mt-1 text-sm leading-snug ${soft}`}>{it.why}</p>
@@ -600,18 +622,26 @@ function StageItems({ plan, verdict }: { plan: HomePlan; verdict: "now" | "later
         .map((r) => (
           <div key={r.id}>
             <dt className="eyebrow">{r.name}</dt>
-            <dd className="mt-1 text-[0.95rem] leading-relaxed text-ink-soft">{r.buy[verdict].map((i) => i.name).join(" · ")}</dd>
+            <dd className="mt-1 text-[0.95rem] leading-relaxed text-ink-soft">{r.buy[verdict].map(itemLabel).join(" · ")}</dd>
           </div>
         ))}
+      {plan.otherPurchases[verdict].length > 0 && (
+        <div>
+          <dt className="eyebrow">Household tools</dt>
+          <dd className="mt-1 text-[0.95rem] leading-relaxed text-ink-soft">{plan.otherPurchases[verdict].map(itemLabel).join(" · ")}</dd>
+        </div>
+      )}
     </dl>
   );
 }
 
 function checklistText(plan: HomePlan) {
   const lines = ["My RoomReset home plan", "", "Before moving in:", ...plan.checks.map((c) => `☐ ${c}`), "", "Buy first:"];
-  for (const r of plan.rooms) if (r.buy.now.length) lines.push(`${r.name}: ${r.buy.now.map((i) => i.name).join(", ")}`);
+  for (const r of plan.rooms) if (r.buy.now.length) lines.push(`${r.name}: ${r.buy.now.map(itemLabel).join(", ")}`);
+  if (plan.otherPurchases.now.length) lines.push(`Household tools: ${plan.otherPurchases.now.map(itemLabel).join(", ")}`);
   lines.push("", "Later:");
-  for (const r of plan.rooms) if (r.buy.later.length) lines.push(`${r.name}: ${r.buy.later.map((i) => i.name).join(", ")}`);
+  for (const r of plan.rooms) if (r.buy.later.length) lines.push(`${r.name}: ${r.buy.later.map(itemLabel).join(", ")}`);
+  if (plan.otherPurchases.later.length) lines.push(`Household tools: ${plan.otherPurchases.later.map(itemLabel).join(", ")}`);
   lines.push("", `Top palette: ${plan.palettes[0].palette.name} (${plan.palettes[0].colours.map((c) => c.hex).join(" ")})`);
   return lines.join("\n");
 }
@@ -619,22 +649,35 @@ function checklistText(plan: HomePlan) {
 function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
   const [msg, setMsg] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmShare, setConfirmShare] = useState(false);
 
   useEffect(() => {
-    if (!confirmReset) return;
-    const t = setTimeout(() => setConfirmReset(false), 5000);
+    if (!confirmReset && !confirmShare) return;
+    const t = setTimeout(() => {
+      setConfirmReset(false);
+      setConfirmShare(false);
+    }, 7000);
     return () => clearTimeout(t);
-  }, [confirmReset]);
+  }, [confirmReset, confirmShare]);
 
   async function share() {
-    const url = `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH}/results?d=${encodeAnswers(answers)}`;
+    if (!confirmShare) {
+      setConfirmShare(true);
+      setMsg("The link will contain your household, routine, taste and budget answers — but no name or email. Tap Share again to continue.");
+      return;
+    }
+    const url = `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH}/results#d=${encodeAnswers(answers)}`;
     const text = `My RoomReset home plan — top palette: ${plan.palettes[0].palette.name}. Plan yours:`;
+    setConfirmShare(false);
     try {
       if (navigator.share) return await navigator.share({ title: "My home plan", text, url });
       await navigator.clipboard.writeText(`${text} ${url}`);
       setMsg("Link copied — it carries your quiz answers, never your name or email.");
     } catch (e) {
-      if ((e as Error).name !== "AbortError") setMsg("Couldn't share automatically. Copy the page address instead.");
+      if ((e as Error).name !== "AbortError") {
+        history.replaceState(null, "", url);
+        setMsg("Sharing failed. The address bar now contains the share link; copy it manually if you still want to send these answers.");
+      }
     }
   }
 
@@ -657,7 +700,7 @@ function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
     <div className="rise mt-10" style={{ animationDelay: "240ms" }}>
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={share} className={buttonClass("primary", "px-5")}>
-          <Share2 className="size-4" aria-hidden /> Share my plan
+          <Share2 className="size-4" aria-hidden /> {confirmShare ? "Share answers in link" : "Share my plan"}
         </button>
         <button type="button" onClick={copyChecklist} className={buttonClass("secondary", "px-5")}>
           <ClipboardList className="size-4" aria-hidden /> Copy checklist

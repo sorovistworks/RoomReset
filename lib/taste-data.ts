@@ -292,16 +292,22 @@ export const MATERIALS: Material[] = [
   { id: "woven", name: "Soft woven textiles", photo: PHOTOS.woven },
 ];
 
-// ---------- Q6–Q12: your home and routine ----------
+// ---------- Q6–Q13: your home and routine ----------
 
 export type Tenure = "rent" | "own";
-export type HomeSize = "1rk" | "1bhk" | "2bhk" | "3bhk";
-export type Climate = "humid" | "north" | "mild" | "hills";
+export type HomeSize = "1rk" | "1bhk" | "2bhk" | "3bhk" | "4bhk" | "5bhk" | "6bhk-plus";
+export type Climate = "humid" | "north" | "hot-dry" | "mild" | "hills";
 export type Member = "partner" | "kids" | "elders" | "pets" | "flatmates";
 export type Work = "wfh" | "hybrid" | "office" | "long";
 export type Cooking = "daily" | "light" | "rarely";
 export type Help = "none" | "maid" | "maid-cook" | "full-time";
 export type Budget = "tight" | "mid" | "high" | "premium";
+export type ExistingItem = "bed" | "mattress" | "wardrobe" | "fan" | "ac" | "heater" | "desk" | "fridge" | "purifier" | "stove" | "induction" | "mixer" | "microwave" | "dishwasher" | "washer" | "dryer" | "geyser" | "sofa" | "dining" | "tv" | "inverter";
+export type RentalPermission = "paint" | "drill" | "adhesive" | "exterior";
+export type ChildAge = "under6" | "6to12" | "teen" | "unknown";
+export type PetType = "cat" | "dog" | "bird" | "small" | "other";
+export type HouseholdNeed = "mobility" | "wheelchair" | "low-vision" | "respiratory";
+export type HelpDuty = "cleaning" | "dishes" | "cooking" | "laundry" | "ironing";
 
 export interface Option<T extends string> {
   id: T;
@@ -310,7 +316,7 @@ export interface Option<T extends string> {
 }
 
 export const TENURES: Option<Tenure>[] = [
-  { id: "rent", label: "Renting", hint: "Deposit-safe, no-drill advice" },
+  { id: "rent", label: "Renting", hint: "Permission-aware, movable-first advice" },
   { id: "own", label: "My own flat", hint: "Includes modular and built-in work" },
 ];
 
@@ -318,14 +324,18 @@ export const HOMES: Option<HomeSize>[] = [
   { id: "1rk", label: "1RK", hint: "One room + kitchen" },
   { id: "1bhk", label: "1BHK", hint: "" },
   { id: "2bhk", label: "2BHK", hint: "" },
-  { id: "3bhk", label: "3BHK+", hint: "" },
+  { id: "3bhk", label: "3BHK", hint: "" },
+  { id: "4bhk", label: "4BHK", hint: "" },
+  { id: "5bhk", label: "5BHK", hint: "" },
+  { id: "6bhk-plus", label: "6BHK+", hint: "Larger homes" },
 ];
 
 export const CLIMATES: Option<Climate>[] = [
-  { id: "humid", label: "Humid & coastal", hint: "Mumbai, Chennai, Kolkata, Kochi" },
-  { id: "north", label: "Hot summers, cold winters", hint: "Delhi, Jaipur, Lucknow, Ahmedabad" },
-  { id: "mild", label: "Mild most of the year", hint: "Bengaluru, Pune, Hyderabad" },
-  { id: "hills", label: "Cool & hilly", hint: "Dehradun, Shimla, Shillong" },
+  { id: "humid", label: "Humid & coastal", hint: "A long humid or monsoon season" },
+  { id: "north", label: "Hot summers, cold winters", hint: "Large seasonal swings" },
+  { id: "hot-dry", label: "Hot & mostly dry", hint: "Long hot season, lower humidity" },
+  { id: "mild", label: "Mild most of the year", hint: "Moderate temperatures most months" },
+  { id: "hills", label: "Cool & hilly", hint: "Cool or cold for much of the year" },
 ];
 
 export type Guests = "never" | "sometimes" | "often";
@@ -360,7 +370,68 @@ export const HELPS: Option<Help>[] = [
   { id: "none", label: "No help yet", hint: "We do it ourselves" },
   { id: "maid", label: "Part-time maid", hint: "Cleaning and dishes" },
   { id: "maid-cook", label: "Maid and a cook", hint: "Cleaning, dishes and meals" },
-  { id: "full-time", label: "Full-time help", hint: "Someone there all day" },
+  { id: "full-time", label: "Full-day help", hint: "Tell us separately if they live in" },
+];
+
+export const EXISTING_ITEMS: Option<ExistingItem>[] = [
+  { id: "bed", label: "Bed", hint: "" },
+  { id: "mattress", label: "Mattress", hint: "" },
+  { id: "wardrobe", label: "Wardrobe", hint: "" },
+  { id: "fan", label: "Ceiling fan", hint: "" },
+  { id: "ac", label: "AC", hint: "" },
+  { id: "heater", label: "Room heater", hint: "" },
+  { id: "desk", label: "Desk and chair", hint: "" },
+  { id: "fridge", label: "Fridge", hint: "" },
+  { id: "purifier", label: "Water treatment", hint: "" },
+  { id: "stove", label: "Gas stove", hint: "" },
+  { id: "induction", label: "Induction cooktop", hint: "" },
+  { id: "mixer", label: "Mixer grinder", hint: "" },
+  { id: "microwave", label: "Microwave or OTG", hint: "" },
+  { id: "dishwasher", label: "Dishwasher", hint: "" },
+  { id: "washer", label: "Washing machine", hint: "" },
+  { id: "dryer", label: "Dryer", hint: "" },
+  { id: "geyser", label: "Geyser", hint: "" },
+  { id: "sofa", label: "Sofa or sofa-bed", hint: "" },
+  { id: "dining", label: "Dining table", hint: "" },
+  { id: "tv", label: "TV and stand", hint: "" },
+  { id: "inverter", label: "Inverter and battery", hint: "" },
+];
+
+export const RENTAL_PERMISSIONS: Option<RentalPermission>[] = [
+  { id: "paint", label: "Repainting", hint: "" },
+  { id: "drill", label: "Drilling", hint: "" },
+  { id: "adhesive", label: "Adhesive hooks", hint: "" },
+  { id: "exterior", label: "Balcony or exterior work", hint: "" },
+];
+
+export const CHILD_AGES: Option<ChildAge>[] = [
+  { id: "under6", label: "Under 6", hint: "" },
+  { id: "6to12", label: "6–12", hint: "" },
+  { id: "teen", label: "Teenager", hint: "" },
+  { id: "unknown", label: "Several ages / prefer not to say", hint: "" },
+];
+
+export const PET_TYPES: Option<PetType>[] = [
+  { id: "cat", label: "Cat", hint: "" },
+  { id: "dog", label: "Dog", hint: "" },
+  { id: "bird", label: "Bird", hint: "" },
+  { id: "small", label: "Small pet", hint: "Rabbit, hamster or similar" },
+  { id: "other", label: "Another pet", hint: "" },
+];
+
+export const HOUSEHOLD_NEEDS: Option<HouseholdNeed>[] = [
+  { id: "mobility", label: "Balance or transfer support", hint: "" },
+  { id: "wheelchair", label: "Wheelchair or reach access", hint: "" },
+  { id: "low-vision", label: "Low-vision support", hint: "" },
+  { id: "respiratory", label: "Asthma or allergies", hint: "" },
+];
+
+export const HELP_DUTIES: Option<HelpDuty>[] = [
+  { id: "cleaning", label: "Cleaning", hint: "" },
+  { id: "dishes", label: "Dishes", hint: "" },
+  { id: "cooking", label: "Cooking", hint: "" },
+  { id: "laundry", label: "Laundry", hint: "" },
+  { id: "ironing", label: "Ironing", hint: "" },
 ];
 
 export const BUDGETS: (Option<Budget> & { total: number })[] = [
@@ -369,6 +440,8 @@ export const BUDGETS: (Option<Budget> & { total: number })[] = [
   { id: "high", label: "₹4–10 lakh", hint: "Well done, room by room", total: 700000 },
   { id: "premium", label: "₹10 lakh+", hint: "No corners cut", total: 1200000 },
 ];
+
+export const budgetForAmount = (amount: number): Budget => (amount < 150_000 ? "tight" : amount <= 400_000 ? "mid" : amount <= 1_000_000 ? "high" : "premium");
 
 // ---------- Q7: what's already in the flat ----------
 
@@ -459,6 +532,7 @@ export const normaliseHex = (v: string) => {
 // ---------- Answers ----------
 
 export interface Answers {
+  schemaVersion: 1 | 2;
   styles: StyleId[];
   moods: MoodId[];
   avoidColours: ColourFamily[];
@@ -467,23 +541,33 @@ export interface Answers {
   tenure: Tenure | null;
   home: HomeSize | null;
   vastu: boolean;
-  balcony: boolean;
+  balcony: boolean | null;
+  bathrooms: number | null;
   climate: Climate | null;
   household: Member[];
+  childAges: ChildAge[];
+  petTypes: PetType[];
+  householdNeeds: HouseholdNeed[];
   people: number | null; // headcount including you; null = not given, so we estimate
-  guests: Guests | null; // how often people stay over; null = not answered (treated as "a few times a year")
+  guests: Guests | null;
   work: Work | null;
   cooking: Cooking | null;
   help: Help | null;
+  helpLivesIn: boolean | null;
+  helpDuties: HelpDuty[];
   budget: Budget | null;
+  budgetAmount: number | null;
   fixtures: Record<FixtureKey, FixturePick | null>;
+  existingItems: ExistingItem[];
+  inventoryConfirmed: boolean;
+  rentalPermissions: RentalPermission[];
   repaint: boolean;
 }
 
 export const STEP_COUNT = 13;
 
 // Headcount. Each person-type you pick means at least one more person (pets don't count).
-export const MAX_PEOPLE = 12;
+export const MAX_PEOPLE = 20;
 export const minPeople = (household: Member[]) => 1 + household.filter((m) => m !== "pets").length;
 // With no count given, kids, parents and flatmates are assumed to come in twos.
 export const estimatePeople = (household: Member[]) =>
@@ -492,6 +576,7 @@ export const peopleCount = (a: Pick<Answers, "household" | "people">) => Math.ma
 export const LIMITS = { styles: 3, moods: 2, avoidColours: 6, materials: 5, household: 5 } as const;
 
 export const EMPTY_ANSWERS: Answers = {
+  schemaVersion: 2,
   styles: [],
   moods: [],
   avoidColours: [],
@@ -500,16 +585,26 @@ export const EMPTY_ANSWERS: Answers = {
   tenure: null,
   home: null,
   vastu: false,
-  balcony: true,
+  balcony: null,
+  bathrooms: null,
   climate: null,
   household: [],
+  childAges: [],
+  petTypes: [],
+  householdNeeds: [],
   people: null,
   guests: null,
   work: null,
   cooking: null,
   help: null,
+  helpLivesIn: null,
+  helpDuties: [],
   budget: null,
+  budgetAmount: null,
   fixtures: { floor: null, doors: null, walls: null, counter: null, cabinets: null },
+  existingItems: [],
+  inventoryConfirmed: false,
+  rentalPermissions: [],
   repaint: false,
 };
 
@@ -520,6 +615,12 @@ const VALID = {
   avoidColours: ids(COLOUR_FAMILIES),
   materials: ids(MATERIALS),
   household: ids(MEMBERS),
+  childAges: ids(CHILD_AGES),
+  petTypes: ids(PET_TYPES),
+  householdNeeds: ids(HOUSEHOLD_NEEDS),
+  helpDuties: ids(HELP_DUTIES),
+  existingItems: ids(EXISTING_ITEMS),
+  rentalPermissions: ids(RENTAL_PERMISSIONS),
 };
 const CHOICES = { tenure: ids(TENURES), home: ids(HOMES), climate: ids(CLIMATES), work: ids(WORKS), cooking: ids(COOKING), help: ids(HELPS), budget: ids(BUDGETS) };
 export type ChoiceKey = keyof typeof CHOICES;
@@ -527,54 +628,103 @@ export type ChoiceKey = keyof typeof CHOICES;
 // Answers arrive from localStorage or share links, so treat them as untrusted.
 export function sanitizeAnswers(raw: unknown): Answers {
   const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const legacy = Boolean(raw && typeof raw === "object" && r.schemaVersion !== 2 && "styles" in r);
   const list = <K extends keyof typeof LIMITS>(key: K) =>
     (Array.isArray(r[key]) ? [...new Set(r[key] as unknown[])] : [])
       .filter((v): v is string => typeof v === "string" && VALID[key].has(v))
       .slice(0, LIMITS[key]) as never;
+  const safeList = <T extends keyof Pick<typeof VALID, "childAges" | "petTypes" | "householdNeeds" | "helpDuties" | "existingItems" | "rentalPermissions">>(key: T) =>
+    (Array.isArray(r[key]) ? [...new Set(r[key] as unknown[])] : []).filter((v): v is string => typeof v === "string" && VALID[key].has(v)) as never;
   const one = (key: ChoiceKey) => (typeof r[key] === "string" && CHOICES[key].has(r[key]) ? r[key] : null) as never;
   const b = Number(r.boldness);
+  const tenure = one("tenure") as Tenure | null;
+  const home = one("home") as HomeSize | null;
+  const help = one("help") as Help | null;
+  const budget = one("budget") as Budget | null;
+  const household = list("household") as Member[];
+  const legacyDuties: HelpDuty[] = help === "maid" ? ["cleaning", "dishes"] : help === "maid-cook" ? ["cleaning", "dishes", "cooking"] : help === "full-time" ? ["cleaning", "dishes"] : [];
+  const bandTotal = BUDGETS.find((x) => x.id === budget)?.total ?? null;
+  const amount = Number(r.budgetAmount);
+  const bathroomCount = Number(r.bathrooms);
+  const budgetAmount = Number.isFinite(amount) && amount >= 1_000 && amount <= 100_000_000 ? Math.round(amount) : legacy ? bandTotal : null;
   return {
+    schemaVersion: legacy ? 1 : 2,
     styles: list("styles"),
     moods: list("moods"),
     avoidColours: list("avoidColours"),
     boldness: Number.isFinite(b) ? Math.min(5, Math.max(1, Math.round(b))) : 3,
     materials: list("materials"),
-    tenure: one("tenure"),
-    home: one("home"),
+    tenure,
+    home,
     vastu: r.vastu === true,
-    balcony: r.balcony !== false,
+    balcony: typeof r.balcony === "boolean" ? r.balcony : legacy ? true : null,
+    bathrooms: Number.isInteger(bathroomCount) && bathroomCount >= 1 && bathroomCount <= 10 ? bathroomCount : legacy && home ? (home === "1rk" || home === "1bhk" ? 1 : 2) : null,
     climate: one("climate"),
-    household: list("household"),
-    guests: GUESTS.some((g) => g.id === r.guests) ? (r.guests as Guests) : null,
+    household,
+    childAges: household.includes("kids") ? ((safeList("childAges") as ChildAge[]).length ? safeList("childAges") : legacy ? ["unknown"] : []) : [],
+    petTypes: household.includes("pets") ? ((safeList("petTypes") as PetType[]).length ? safeList("petTypes") : legacy ? ["other"] : []) : [],
+    householdNeeds: safeList("householdNeeds"),
+    guests: GUESTS.some((g) => g.id === r.guests) ? (r.guests as Guests) : legacy ? "sometimes" : null,
     people: Number.isInteger(r.people) && (r.people as number) >= 1 && (r.people as number) <= MAX_PEOPLE ? (r.people as number) : null,
     work: one("work"),
     cooking: one("cooking"),
-    help: one("help"),
-    budget: one("budget"),
-    fixtures: sanitizeFixtures(r.fixtures),
-    repaint: r.repaint === true,
+    help,
+    helpLivesIn: help === null ? null : help === "full-time" ? (typeof r.helpLivesIn === "boolean" ? r.helpLivesIn : legacy ? false : null) : false,
+    helpDuties: help === "none" || help === null ? [] : (safeList("helpDuties") as HelpDuty[]).length ? safeList("helpDuties") : legacy ? legacyDuties : [],
+    budget: budgetAmount === null ? budget : budgetForAmount(budgetAmount),
+    budgetAmount,
+    fixtures: sanitizeFixtures(r.fixtures, tenure),
+    existingItems: safeList("existingItems"),
+    inventoryConfirmed: r.inventoryConfirmed === true || legacy,
+    rentalPermissions: tenure === "rent" ? safeList("rentalPermissions") : [],
+    repaint: tenure === "rent" && ((safeList("rentalPermissions") as RentalPermission[]).includes("paint") || (legacy && r.repaint === true)),
   };
 }
 
-function sanitizeFixtures(raw: unknown): Answers["fixtures"] {
+function colourDistance(a: string, b: string) {
+  const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const [x, y] = [rgb(a), rgb(b)];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+}
+
+export const isPlausibleFixtureHex = (hex: string, expected: string) => colourDistance(hex, expected) <= 120;
+
+function sanitizeFixtures(raw: unknown, tenure: Tenure | null): Answers["fixtures"] {
   const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, { id?: unknown; hex?: unknown } | undefined>;
   const out = { ...EMPTY_ANSWERS.fixtures };
   for (const f of FIXTURES) {
     const v = r[f.key];
-    if (!v || typeof v.id !== "string" || !f.options.some((o) => o.id === v.id)) continue;
+    // Do not throw away a valid surface answer before tenure has been answered.
+    // Once tenure is known, owner-only and renter-only choices are enforced.
+    const allowed = tenure === null ? f.options : fixtureOptions(f, tenure === "own");
+    const option = allowed.find((o) => o.id === v?.id);
+    if (!v || typeof v.id !== "string" || !option) continue;
     const hex = typeof v.hex === "string" ? normaliseHex(v.hex) : null;
-    out[f.key] = hex && v.id !== UNDECIDED && v.id !== NONE ? { id: v.id, hex } : { id: v.id };
+    const plausible = hex && option.hex && isPlausibleFixtureHex(hex, option.hex);
+    out[f.key] = plausible && v.id !== UNDECIDED && v.id !== NONE ? { id: v.id, hex } : { id: v.id };
   }
   return out;
 }
 
 export function isComplete(a: Answers): boolean {
-  return (
+  const common =
     a.styles.length > 0 &&
     a.moods.length > 0 &&
     a.materials.length > 0 &&
     (Object.keys(CHOICES) as ChoiceKey[]).every((k) => a[k] !== null) &&
-    FIXTURES.every((f) => a.fixtures[f.key] !== null)
+    FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id));
+  if (!common || a.schemaVersion === 1) return common;
+  return (
+    a.balcony !== null &&
+    a.bathrooms !== null &&
+    a.guests !== null &&
+    a.people !== null &&
+    a.people >= minPeople(a.household) &&
+    a.inventoryConfirmed &&
+    a.budgetAmount !== null &&
+    (!a.household.includes("kids") || a.childAges.length > 0) &&
+    (!a.household.includes("pets") || a.petTypes.length > 0) &&
+    (a.help === "none" || (a.helpDuties.length > 0 && (a.help !== "full-time" || a.helpLivesIn !== null)))
   );
 }
 

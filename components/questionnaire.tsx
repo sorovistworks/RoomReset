@@ -34,20 +34,27 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { freshProgress, loadSaved, saveProgress, type Saved } from "@/lib/storage";
-import { primaryStyle } from "@/lib/taste-engine";
+import { encodeAnswers, primaryStyle } from "@/lib/taste-engine";
 import { QUIZ_PHOTO_SIZES } from "@/lib/photos";
 import {
   BOLDNESS_LABELS,
   BUDGETS,
+  budgetForAmount,
   CLIMATES,
   COLOUR_FAMILIES,
   COLOUR_PICKER_URL,
   COOKING,
+  CHILD_AGES,
+  EXISTING_ITEMS,
   FIXTURES,
   fixtureOptions,
   GUESTS,
+  HELP_DUTIES,
   HELPS,
   HOMES,
+  HOUSEHOLD_NEEDS,
+  isPlausibleFixtureHex,
+  isComplete,
   LIMITS,
   MATERIALS,
   MAX_PEOPLE,
@@ -55,7 +62,9 @@ import {
   minPeople,
   MOODS,
   normaliseHex,
+  PET_TYPES,
   peopleCount,
+  RENTAL_PERMISSIONS,
   STEP_COUNT,
   STYLES,
   TENURES,
@@ -91,6 +100,7 @@ const ICONS: Record<string, LucideIcon> = {
   own: House,
   humid: Droplets,
   north: ThermometerSun,
+  "hot-dry": ThermometerSun,
   mild: CloudSun,
   hills: Mountain,
   partner: Heart,
@@ -112,6 +122,18 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const CHOICE_LISTS: Record<Exclude<ChoiceKey, "tenure" | "home">, Option<string>[]> = { climate: CLIMATES, work: WORKS, cooking: COOKING, help: HELPS, budget: BUDGETS };
+
+function stepValid(key: StepKey, a: Answers): boolean {
+  if (key === "boldness") return true;
+  if (key === "home") return a.tenure !== null && a.home !== null && a.balcony !== null && a.bathrooms !== null;
+  if (key === "fixtures") return a.inventoryConfirmed && FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id));
+  if (key === "household")
+    return a.people !== null && a.people >= minPeople(a.household) && a.guests !== null && (!a.household.includes("kids") || a.childAges.length > 0) && (!a.household.includes("pets") || a.petTypes.length > 0);
+  if (key === "help") return a.help !== null && (a.help === "none" || (a.helpDuties.length > 0 && (a.help !== "full-time" || a.helpLivesIn !== null)));
+  if (key === "budget") return a.budget !== null && a.budgetAmount !== null;
+  if (key in LIMITS) return (a[key as ListKey] as string[]).length >= (STEPS.find((s) => s.key === key)?.min ?? 0);
+  return a[key as ChoiceKey] !== null;
+}
 
 // Mini-room colours for each boldness level (wall, rug, sofa, cushion, art, lamp).
 const BOLD_ROOMS = [
@@ -137,13 +159,14 @@ export function Questionnaire() {
     if (saved.completed && !stepParam) return router.replace("/results");
     const q = Number(stepParam);
     if (Number.isInteger(q) && q >= 1 && q <= STEP_COUNT) saved.step = q - 1;
+    if (saved.answers.schemaVersion === 1) saved.answers = { ...saved.answers, schemaVersion: 2 };
     setEditing(saved.completed);
     setS(saved);
   }, []);
 
   useEffect(() => {
-    if (s) saveProgress(s);
-  }, [s]);
+    if (s && !editing && !saveProgress(s)) setNotice("This browser is blocking saved progress. Keep this tab open until you finish.");
+  }, [s, editing]);
 
   // Move focus to the new question for keyboard and screen-reader users.
   useEffect(() => {
@@ -166,7 +189,10 @@ export function Questionnaire() {
     const list = a[key] as string[];
     if (list.includes(id)) {
       setNotice("");
-      return set({ [key]: list.filter((x) => x !== id) });
+      const patch: Partial<Answers> = { [key]: list.filter((x) => x !== id) };
+      if (key === "household" && id === "kids") patch.childAges = [];
+      if (key === "household" && id === "pets") patch.petTypes = [];
+      return set(patch);
     }
     if (list.length >= LIMITS[key]) return setNotice(`You can choose up to ${LIMITS[key]}. Deselect one to swap it.`);
     setNotice("");
@@ -175,24 +201,37 @@ export function Questionnaire() {
 
   const isList = step.key in LIMITS;
   const count = isList ? (a[step.key as ListKey] as string[]).length : 0;
-  const valid =
-    step.key === "boldness"
-      ? true
-      : step.key === "home"
-        ? a.tenure !== null && a.home !== null
-        : step.key === "fixtures"
-          ? FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id))
-          : isList ? count >= (step.min ?? 0) : a[step.key as ChoiceKey] !== null;
+  const valid = stepValid(step.key, a);
   const last = s.step === STEPS.length - 1;
   const optional = step.min === 0;
 
   function go(delta: number) {
     setNotice("");
     if (delta > 0 && !valid)
-      return setNotice(isList ? "Choose at least one option to continue." : step.key === "fixtures" ? "Choose an option for each surface to continue." : "Choose an option to continue.");
+      return setNotice(
+        step.key === "home"
+          ? "Confirm the tenure, size, bathroom count and whether there is a balcony."
+          : step.key === "fixtures"
+            ? "Choose every fixed surface and confirm what you are bringing."
+            : step.key === "household"
+              ? "Confirm the headcount, guest frequency and any child or pet details that apply."
+              : step.key === "help"
+                ? "Confirm what your help covers and whether full-day help lives in."
+                : step.key === "budget"
+                  ? "Choose a band and enter the most you can spend."
+                  : isList
+                    ? "Choose at least one option to continue."
+                    : "Choose an option to continue.",
+      );
     if (delta > 0 && last) {
-      saveProgress({ ...s!, completed: true, primaryStyle: primaryStyle(a) });
-      return router.push("/results");
+      if (!isComplete(a)) {
+        const first = STEPS.findIndex((candidate) => !stepValid(candidate.key, a));
+        if (first >= 0) setS({ ...s!, step: first });
+        return setNotice("One earlier answer still needs confirmation.");
+      }
+      const completed = { ...s!, completed: true, primaryStyle: primaryStyle(a) };
+      const stored = saveProgress(completed);
+      return router.push(stored ? "/results" : `/results#d=${encodeAnswers(a)}&local=1`);
     }
     setS({ ...s!, step: Math.min(STEPS.length - 1, Math.max(0, s!.step + delta)) });
   }
@@ -330,10 +369,19 @@ export function Questionnaire() {
 
             {step.key === "home" && (
               <div className="space-y-10">
-                <Cards label="Rented or owned" options={TENURES} isOn={(id) => a.tenure === id} onPick={(id) => set({ tenure: id as Answers["tenure"] })} />
+                <Cards
+                  label="Rented or owned"
+                  options={TENURES}
+                  isOn={(id) => a.tenure === id}
+                  onPick={(id) => {
+                    const tenure = id as Answers["tenure"];
+                    if (tenure === a.tenure) return;
+                    set({ tenure, fixtures: { floor: null, doors: null, walls: null, counter: null, cabinets: null }, rentalPermissions: [], repaint: false });
+                  }}
+                />
                 <div>
                   <p className="eyebrow">Size</p>
-                  <div role="radiogroup" aria-label="Home size" className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div role="radiogroup" aria-label="Home size" className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
                     {HOMES.map((h) => {
                       const on = a.home === h.id;
                       return (
@@ -352,29 +400,55 @@ export function Questionnaire() {
                     })}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  aria-pressed={a.balcony}
-                  onClick={() => set({ balcony: !a.balcony })}
-                  className={`flex min-h-14 items-center gap-3 rounded-full border py-2 pl-3 pr-6 text-left text-sm transition ${a.balcony ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
-                >
-                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border ${a.balcony ? "border-ivory bg-ivory text-ink" : "border-line"}`}>
-                    {a.balcony && <Check className="size-4" aria-hidden />}
-                  </span>
-                  There&apos;s a balcony <span className={a.balcony ? "text-ivory/70" : "text-ink-soft"}>— the washer and drying move indoors if not</span>
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={a.vastu}
-                  onClick={() => set({ vastu: !a.vastu })}
-                  className={`flex min-h-14 items-center gap-3 rounded-full border py-2 pl-3 pr-6 text-left text-sm transition ${a.vastu ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
-                >
-                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border ${a.vastu ? "border-ivory bg-ivory text-ink" : "border-line"}`}>
-                    {a.vastu && <Check className="size-4" aria-hidden />}
-                  </span>
-                  Include Vastu tips <span className={a.vastu ? "text-ivory/70" : "text-ink-soft"}>— optional</span>
-                </button>
+                <NumberPicker
+                  label="How many bathrooms?"
+                  hint="This stops the plan pricing one geyser while talking about several bathrooms."
+                  value={a.bathrooms}
+                  min={1}
+                  max={10}
+                  onChange={(bathrooms) => set({ bathrooms })}
+                />
+                <div>
+                  <p id="balcony-label" className="eyebrow">Balcony</p>
+                  <div role="radiogroup" aria-labelledby="balcony-label" className="mt-4 flex flex-wrap gap-3">
+                    {([true, false] as const).map((value) => {
+                      const on = a.balcony === value;
+                      return (
+                        <button
+                          key={String(value)}
+                          type="button"
+                          role="radio"
+                          aria-checked={on}
+                          onClick={() => set({ balcony: value })}
+                          className={`min-h-12 rounded-full border px-6 text-sm transition ${on ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
+                        >
+                          {value ? "Yes, there is a balcony" : "No balcony"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {a.tenure === "rent" && (
+                  <PillPicker
+                    label="What has the landlord approved in writing?"
+                    hint="Leave an item unselected unless it is genuinely permitted. The plan treats unselected work as off-limits."
+                    options={RENTAL_PERMISSIONS}
+                    values={a.rentalPermissions}
+                    onChange={(rentalPermissions) => set({ rentalPermissions, repaint: rentalPermissions.includes("paint") })}
+                  />
+                )}
+                <div>
+                  <button
+                    type="button"
+                    aria-pressed={a.vastu}
+                    onClick={() => set({ vastu: !a.vastu })}
+                    className={`flex min-h-14 items-center gap-3 rounded-full border py-2 pl-3 pr-6 text-left text-sm transition ${a.vastu ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
+                  >
+                    <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border ${a.vastu ? "border-ivory bg-ivory text-ink" : "border-line"}`}>
+                      {a.vastu && <Check className="size-4" aria-hidden />}
+                    </span>
+                    Include Vastu tips <span className={a.vastu ? "text-ivory/70" : "text-ink-soft"}>— optional</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -385,18 +459,36 @@ export function Questionnaire() {
               <>
                 <Cards multi label="Who lives with you" options={MEMBERS} isOn={(id) => chosen("household", id)} onPick={(id) => toggle("household", id)} />
                 <Headcount a={a} set={set} />
+                {a.household.includes("kids") && <PillPicker label="What age groups are the children?" hint="This changes bunk-bed, socket and storage advice." options={CHILD_AGES} values={a.childAges} onChange={(childAges) => set({ childAges })} />}
+                {a.household.includes("pets") && <PillPicker label="Which pets live here?" hint="Plant and material advice is filtered for them." options={PET_TYPES} values={a.petTypes} onChange={(petTypes) => set({ petTypes })} />}
+                <PillPicker label="Any needs the plan must respect?" hint="Optional. Choose needs, not age labels." options={HOUSEHOLD_NEEDS} values={a.householdNeeds} onChange={(householdNeeds) => set({ householdNeeds })} />
                 <GuestsPicker a={a} set={set} />
               </>
             )}
 
             {step.key in CHOICE_LISTS && (
-              <Cards
-                label={step.title}
-                options={CHOICE_LISTS[step.key as keyof typeof CHOICE_LISTS]}
-                isOn={(id) => a[step.key as ChoiceKey] === id}
-                onPick={(id) => set({ [step.key]: id })}
-                marks={step.key === "budget" ? ["₹", "₹₹", "₹₹₹", "₹₹₹₹"] : undefined}
-              />
+              <div className="space-y-8">
+                <Cards
+                  label={step.title}
+                  options={CHOICE_LISTS[step.key as keyof typeof CHOICE_LISTS]}
+                  isOn={(id) => a[step.key as ChoiceKey] === id}
+                  onPick={(id) => {
+                    if (step.key === "help") {
+                      const help = id as Answers["help"];
+                      const helpDuties = help === "maid" ? ["cleaning", "dishes"] as Answers["helpDuties"] : help === "maid-cook" ? ["cleaning", "dishes", "cooking"] as Answers["helpDuties"] : [];
+                      return set({ help, helpDuties, helpLivesIn: help === "full-time" ? null : false });
+                    }
+                    if (step.key === "budget") {
+                      const budget = id as Answers["budget"];
+                      return set({ budget, budgetAmount: BUDGETS.find((b) => b.id === budget)!.total });
+                    }
+                    set({ [step.key]: id });
+                  }}
+                  marks={step.key === "budget" ? ["₹", "₹₹", "₹₹₹", "₹₹₹₹"] : undefined}
+                />
+                {step.key === "help" && a.help && a.help !== "none" && <HelpDetails a={a} set={set} />}
+                {step.key === "budget" && a.budget && <BudgetAmount a={a} set={set} />}
+              </div>
             )}
           </div>
         </div>
@@ -467,12 +559,17 @@ function Fixtures({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => vo
                 );
               })}
             </div>
-            {current && options.find((o) => o.id === current.id)?.hex && <HexInput key={`${f.key}-${current.id}`} value={current.hex} onChange={(hex) => setHex(f.key, hex)} />}
+            {current && options.find((o) => o.id === current.id)?.hex && (
+              <HexInput key={`${f.key}-${current.id}`} value={current.hex} expected={options.find((o) => o.id === current.id)!.hex} onChange={(hex) => setHex(f.key, hex)} />
+            )}
             {f.key === "walls" && !own && (
               <button
                 type="button"
                 aria-pressed={a.repaint}
-                onClick={() => set({ repaint: !a.repaint })}
+                onClick={() => {
+                  const repaint = !a.repaint;
+                  set({ repaint, rentalPermissions: repaint ? [...new Set([...a.rentalPermissions, "paint" as const])] : a.rentalPermissions.filter((p) => p !== "paint") });
+                }}
                 className={`mt-4 flex min-h-12 items-center gap-3 rounded-full border py-2 pl-3 pr-6 text-left text-sm transition ${a.repaint ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
               >
                 <span className={`flex size-6 shrink-0 items-center justify-center rounded-full border ${a.repaint ? "border-ivory bg-ivory text-ink" : "border-line"}`}>
@@ -484,14 +581,16 @@ function Fixtures({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => vo
           </div>
         );
       })}
+      <InventoryPicker a={a} set={set} />
     </div>
   );
 }
 
-function HexInput({ value, onChange }: { value?: string; onChange: (hex: string | null) => void }) {
+function HexInput({ value, expected, onChange }: { value?: string; expected: string; onChange: (hex: string | null) => void }) {
   const [text, setText] = useState(value ?? "");
   const hex = normaliseHex(text);
-  const bad = text.trim() !== "" && !hex;
+  const implausible = Boolean(hex && !isPlausibleFixtureHex(hex, expected));
+  const bad = text.trim() !== "" && (!hex || implausible);
   return (
     <label className="mt-3 flex max-w-sm items-center gap-3 text-sm text-ink-soft">
       <span className="shrink-0">Exact colour (optional)</span>
@@ -501,7 +600,7 @@ function HexInput({ value, onChange }: { value?: string; onChange: (hex: string 
           onChange={(e) => {
             setText(e.target.value);
             const h = normaliseHex(e.target.value);
-            if (h || e.target.value.trim() === "") onChange(h);
+            onChange(h && isPlausibleFixtureHex(h, expected) ? h : null);
           }}
           placeholder="#C8B49A"
           spellCheck={false}
@@ -510,7 +609,7 @@ function HexInput({ value, onChange }: { value?: string; onChange: (hex: string 
         />
         <span aria-hidden className="absolute left-2 top-1/2 size-7 -translate-y-1/2 rounded-full border border-black/10" style={{ background: hex ?? "transparent" }} />
       </span>
-      {bad && <span className="sr-only">Enter a 6-digit hex code like #C8B49A</span>}
+      {bad && <span className="text-xs text-clay">{implausible ? "Choose the closer surface option first." : "Use 6 hex digits, like #C8B49A."}</span>}
     </label>
   );
 }
@@ -607,14 +706,141 @@ function Progress({ step }: { step: number }) {
   );
 }
 
-// Optional: decides whether a sofa-cum-bed, guest room or guest bed is worth buying. Tap again to clear.
+function PillPicker<T extends string>({
+  label,
+  hint,
+  options,
+  values,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  options: Option<T>[];
+  values: T[];
+  onChange: (values: T[]) => void;
+}) {
+  return (
+    <div className="rounded-3xl border border-line bg-paper p-6 sm:p-7">
+      <p className="font-serif text-2xl">{label}</p>
+      <p className="mt-1 text-sm leading-relaxed text-ink-soft">{hint}</p>
+      <div className="mt-5 flex flex-wrap gap-2">
+        {options.map((option) => {
+          const on = values.includes(option.id);
+          return (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onChange(on ? values.filter((value) => value !== option.id) : [...values, option.id])}
+              className={`min-h-11 rounded-full border px-5 text-left text-sm transition ${on ? "border-ink bg-ink text-ivory" : "border-line bg-ivory hover:border-ink/40"}`}
+            >
+              {option.label}{option.hint ? <span className={`ml-2 ${on ? "text-ivory/70" : "text-ink-soft"}`}>· {option.hint}</span> : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NumberPicker({ label, hint, value, min, max, onChange }: { label: string; hint: string; value: number | null; min: number; max: number; onChange: (value: number) => void }) {
+  const n = value ?? min;
+  const step = "flex size-12 items-center justify-center rounded-full border border-line bg-ivory transition-colors hover:border-ink/40 disabled:cursor-not-allowed disabled:opacity-40";
+  return (
+    <div className="flex flex-col gap-5 rounded-3xl border border-line bg-paper p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+      <div>
+        <p className="font-serif text-2xl">{label}</p>
+        <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-soft">{hint}</p>
+      </div>
+      <div className="flex items-center gap-4 self-start sm:self-auto">
+        <button type="button" onClick={() => onChange(Math.max(min, n - 1))} disabled={value === null || n <= min} aria-label={`${label}: one fewer`} className={step}>
+          <Minus className="size-4" aria-hidden />
+        </button>
+        <output aria-live="polite" className="w-10 text-center font-serif text-4xl tabular-nums">{value ?? "—"}</output>
+        <button type="button" onClick={() => onChange(Math.min(max, value === null ? min : n + 1))} disabled={n >= max} aria-label={`${label}: one more`} className={step}>
+          <Plus className="size-4" aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function InventoryPicker({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => void }) {
+  return (
+    <div>
+      <PillPicker
+        label="What are you bringing to the new home?"
+        hint="Select a category only when you have enough working units for this home. It will be removed from the shopping list."
+        options={EXISTING_ITEMS}
+        values={a.existingItems}
+        onChange={(existingItems) => set({ existingItems, inventoryConfirmed: true })}
+      />
+      <button
+        type="button"
+        aria-pressed={a.inventoryConfirmed && a.existingItems.length === 0}
+        onClick={() => set({ existingItems: [], inventoryConfirmed: true })}
+        className={`mt-3 min-h-11 rounded-full border px-5 text-sm transition ${a.inventoryConfirmed && a.existingItems.length === 0 ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
+      >
+        I&apos;m not bringing any of these
+      </button>
+    </div>
+  );
+}
+
+function HelpDetails({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => void }) {
+  return (
+    <div className="space-y-4">
+      <PillPicker label="What work do they actually cover?" hint="The plan only credits time that is already delegated." options={HELP_DUTIES} values={a.helpDuties} onChange={(helpDuties) => set({ helpDuties })} />
+      {a.help === "full-time" && (
+        <div className="rounded-3xl border border-line bg-paper p-6 sm:p-7">
+          <p id="live-in-label" className="font-serif text-2xl">Do they live in the home?</p>
+          <div role="radiogroup" aria-labelledby="live-in-label" className="mt-5 flex gap-2">
+            {([true, false] as const).map((value) => (
+              <button key={String(value)} type="button" role="radio" aria-checked={a.helpLivesIn === value} onClick={() => set({ helpLivesIn: value })} className={`min-h-11 rounded-full border px-5 text-sm transition ${a.helpLivesIn === value ? "border-ink bg-ink text-ivory" : "border-line bg-ivory hover:border-ink/40"}`}>
+                {value ? "Yes, live-in" : "No, full-day only"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BudgetAmount({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => void }) {
+  return (
+    <label className="block rounded-3xl border border-line bg-paper p-6 sm:p-7">
+      <span className="font-serif text-2xl">What is the maximum you can spend now?</span>
+      <span className="mt-1 block text-sm leading-relaxed text-ink-soft">We prefilled a number from the band. Change it to your real ceiling; the plan will postpone non-essential items to stay within it.</span>
+      <span className="mt-5 flex max-w-sm items-center rounded-2xl border border-line bg-ivory px-4 focus-within:border-ink">
+        <span className="font-serif text-2xl">₹</span>
+        <input
+          type="number"
+          min={1000}
+          max={100000000}
+          step={5000}
+          value={a.budgetAmount ?? ""}
+          onChange={(event) => {
+            const value = Number(event.target.value);
+            const budgetAmount = Number.isFinite(value) && value >= 1000 ? Math.min(100000000, Math.round(value)) : null;
+            set({ budgetAmount, ...(budgetAmount === null ? {} : { budget: budgetForAmount(budgetAmount) }) });
+          }}
+          className="min-h-14 w-full bg-transparent px-3 text-xl tabular-nums outline-none"
+          aria-label="Maximum setup budget in rupees"
+        />
+      </span>
+    </label>
+  );
+}
+
+// Required because it can allocate a scarce bedroom or trigger guest furniture.
 function GuestsPicker({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => void }) {
   return (
     <div className="mt-4 rounded-3xl border border-line bg-paper p-6 sm:p-7">
       <p id="guests-label" className="font-serif text-2xl">
         Do family or friends stay over?
       </p>
-      <p className="mt-1 text-sm leading-relaxed text-ink-soft">Optional. It decides whether a sofa-cum-bed or guest bed is worth buying.</p>
+      <p className="mt-1 text-sm leading-relaxed text-ink-soft">This decides whether a sofa-bed or guest room is worth spending money on.</p>
       <div role="radiogroup" aria-labelledby="guests-label" className="mt-5 flex flex-wrap gap-2">
         {GUESTS.map((g) => {
           const on = a.guests === g.id;
@@ -624,7 +850,7 @@ function GuestsPicker({ a, set }: { a: Answers; set: (patch: Partial<Answers>) =
               type="button"
               role="radio"
               aria-checked={on}
-              onClick={() => set({ guests: on ? null : g.id })}
+              onClick={() => set({ guests: g.id })}
               className={`min-h-11 rounded-full border px-5 text-sm transition ${on ? "border-ink bg-ink text-ivory" : "border-line bg-ivory hover:border-ink/40"}`}
             >
               {g.label}
@@ -663,6 +889,11 @@ function Headcount({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => v
           <Plus className="size-4" aria-hidden />
         </button>
       </div>
+      {(a.people === null || a.people < min) && (
+        <button type="button" onClick={() => set({ people: n })} className="min-h-11 self-start rounded-full border border-ink px-5 text-sm transition hover:bg-ink hover:text-ivory sm:self-auto">
+          Confirm {n} {n === 1 ? "person" : "people"}
+        </button>
+      )}
     </div>
   );
 }

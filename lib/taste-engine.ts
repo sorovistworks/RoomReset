@@ -11,7 +11,8 @@ export function luminance(hex: string): number {
 
 // Style names are never shown; the ranking only steers palette choice and the waitlist invite.
 export function scoreStyles(a: Answers): { id: StyleId; score: number }[] {
-  return STYLES.map((s, index) => {
+  const candidates = a.styles.length ? STYLES.filter((s) => a.styles.includes(s.id)) : STYLES;
+  return candidates.map((s, index) => {
     let score = 0;
     const pick = a.styles.indexOf(s.id);
     if (pick >= 0) score += 10 - pick * 0.5;

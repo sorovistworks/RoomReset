@@ -6,22 +6,22 @@ import { CountryVote } from "@/components/country-vote";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { PHOTOS } from "@/lib/photos";
 import { buildHomePlan } from "@/lib/home-plan";
-import { NONE, type Answers } from "@/lib/taste-data";
+import { EMPTY_ANSWERS, NONE, type Answers } from "@/lib/taste-data";
 
 // Real engine output for three sample households, rendered at build time.
 const EXAMPLES: Answers[] = [
-  { styles: ["warm-minimalist", "japandi"], moods: ["calm", "cozy"], avoidColours: [], boldness: 2, materials: ["linen", "wood", "ceramics"], tenure: "rent", home: "1bhk", vastu: false, balcony: true, climate: "mild", household: [], people: null, guests: null, work: "hybrid", cooking: "light", help: "none", budget: "tight", fixtures: { floor: { id: "white-tiles" }, doors: { id: "white" }, walls: { id: "white" }, counter: { id: "black-granite" }, cabinets: { id: NONE } }, repaint: false },
-  { styles: ["moody-contemporary", "modern-classic"], moods: ["luxurious"], avoidColours: [], boldness: 4, materials: ["velvet", "metal", "stone"], tenure: "own", home: "3bhk", vastu: true, balcony: true, climate: "north", household: ["partner", "kids"], people: null, guests: null, work: "long", cooking: "daily", help: "maid", budget: "high", fixtures: { floor: { id: "undecided" }, doors: { id: "walnut" }, walls: { id: "undecided" }, counter: { id: "undecided" }, cabinets: { id: "undecided" } }, repaint: false },
-  { styles: ["mediterranean", "bohemian"], moods: ["energised", "romantic"], avoidColours: ["grey"], boldness: 4, materials: ["rattan", "ceramics", "linen"], tenure: "rent", home: "2bhk", vastu: false, balcony: true, climate: "humid", household: ["partner", "pets"], people: null, guests: null, work: "office", cooking: "daily", help: "none", budget: "mid", fixtures: { floor: { id: "grey-tiles" }, doors: { id: "teak" }, walls: { id: "off-white" }, counter: { id: "black-granite" }, cabinets: { id: "wood" } }, repaint: true },
+  { ...EMPTY_ANSWERS, styles: ["warm-minimalist", "japandi"], moods: ["calm", "cozy"], boldness: 2, materials: ["linen", "wood", "ceramics"], tenure: "rent", home: "1bhk", balcony: true, bathrooms: 1, climate: "mild", people: 1, guests: "never", work: "hybrid", cooking: "light", help: "none", helpLivesIn: false, budget: "tight", budgetAmount: 120000, inventoryConfirmed: true, fixtures: { floor: { id: "white-tiles" }, doors: { id: "white" }, walls: { id: "white" }, counter: { id: "black-granite" }, cabinets: { id: NONE } } },
+  { ...EMPTY_ANSWERS, styles: ["moody-contemporary", "modern-classic"], moods: ["luxurious"], boldness: 4, materials: ["velvet", "metal", "stone"], tenure: "own", home: "3bhk", vastu: true, balcony: true, bathrooms: 2, climate: "north", household: ["partner", "kids"], childAges: ["6to12"], people: 4, guests: "sometimes", work: "long", cooking: "daily", help: "maid", helpLivesIn: false, helpDuties: ["cleaning", "dishes"], budget: "high", budgetAmount: 700000, inventoryConfirmed: true, fixtures: { floor: { id: "undecided" }, doors: { id: "walnut" }, walls: { id: "undecided" }, counter: { id: "undecided" }, cabinets: { id: "undecided" } } },
+  { ...EMPTY_ANSWERS, styles: ["mediterranean", "bohemian"], moods: ["energised", "romantic"], avoidColours: ["grey"], boldness: 4, materials: ["rattan", "ceramics", "linen"], tenure: "rent", home: "2bhk", balcony: true, bathrooms: 2, climate: "humid", household: ["partner", "pets"], petTypes: ["dog"], people: 2, guests: "sometimes", work: "office", cooking: "daily", help: "none", helpLivesIn: false, budget: "mid", budgetAmount: 275000, inventoryConfirmed: true, rentalPermissions: ["paint"], fixtures: { floor: { id: "grey-tiles" }, doors: { id: "teak" }, walls: { id: "off-white" }, counter: { id: "black-granite" }, cabinets: { id: "wood" } }, repaint: true },
 ];
 
 const FEATURES = [
   { icon: Sparkle, title: "AI Room Makeovers", body: "Upload a photo of your room and see it reimagined in your Taste DNA." },
-  { icon: Banknote, title: "Budget-Aware Design Plans", body: "Set a budget and get a plan that spends it where it matters most." },
-  { icon: KeyRound, title: "Rental-Friendly Transformations", body: "No drilling, no repainting, no lost deposit — changes you can take with you." },
+  { icon: Banknote, title: "Budget-Aware Design Plans", body: "Set a budget and get a plan that spends it where it matters most.", live: true },
+  { icon: KeyRound, title: "Permission-Aware Rental Plans", body: "Unapproved drilling, paint and exterior work stay out; approved changes and movable alternatives are handled separately.", live: true },
   { icon: ShoppingBag, title: "Shop the Look", body: "Pieces matched to your palette, materials and room — in one place." },
   { icon: SlidersHorizontal, title: "Personal Design Refinements", body: "Make it cozier, calmer or bolder until it feels exactly right." },
-  { icon: ListChecks, title: "Room Makeover Guides", body: "A step-by-step plan for bringing your design to life, weekend by weekend." },
+  { icon: ListChecks, title: "Photo-Specific Makeover Guides", body: "A step-by-step plan for bringing a generated room design to life, weekend by weekend." },
 ];
 
 export default function Home() {
@@ -196,7 +196,7 @@ export default function Home() {
       <section className="wrap py-24 sm:py-32" aria-labelledby="future">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <SectionHeading eyebrow="The future of RoomReset" title={<span id="future"><SplitWords text="Imagine your room, reset." /></span>}>
-            <p>Soon you&apos;ll see your own space reimagined in your Taste DNA — layered, warm and entirely rental-friendly.</p>
+            <p>Soon you&apos;ll see your own space reimagined in your Taste DNA — layered, warm and planned around the permissions you actually have.</p>
           </SectionHeading>
           <p data-reveal className="max-w-xs text-xs leading-relaxed text-ink-soft md:text-right">
             Inspiration imagery for illustration only. These are not transformations created by RoomReset.
@@ -224,9 +224,9 @@ export default function Home() {
         <div className="wrap">
           <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
             <div className="max-w-2xl">
-              <p className="eyebrow text-ivory/60!">On the way</p>
+              <p className="eyebrow text-ivory/60!">Product roadmap</p>
               <h2 id="soon" className="display mt-4 text-4xl sm:text-5xl">
-                <SplitWords text="Everything you need to reset your room — coming soon." />
+                <SplitWords text="Useful now. More of the room journey next." />
               </h2>
             </div>
             <ButtonLink href="/coming-soon" variant="light" className="self-start md:self-auto">
@@ -234,11 +234,11 @@ export default function Home() {
             </ButtonLink>
           </div>
           <ul className="mt-16 grid gap-px overflow-hidden rounded-3xl border border-ivory/10 bg-ivory/10 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, body }) => (
+            {FEATURES.map(({ icon: Icon, title, body, live }) => (
               <li key={title} data-reveal className="bg-ink p-8 sm:p-10">
                 <div className="flex items-start justify-between gap-4">
                   <Icon className="size-6 text-[#d9a184]" strokeWidth={1.4} aria-hidden />
-                  <ComingSoon tone="light" />
+                  {live ? <span className="text-xs uppercase tracking-[0.16em] text-[#d9a184]">Available now</span> : <ComingSoon tone="light" />}
                 </div>
                 <h3 className="mt-10 font-serif text-2xl">{title}</h3>
                 <p className="mt-3 text-[0.95rem] leading-relaxed text-ivory/70">{body}</p>

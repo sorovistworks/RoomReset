@@ -13,8 +13,8 @@ Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · lucide-react · Zod 
 | Route | What it does |
 | --- | --- |
 | `/` | Landing page |
-| `/discover` | 8-step visual questionnaire. Progress is saved in `localStorage`; `?step=N` jumps to a question. |
-| `/results` | Personalised Taste DNA report. `?d=…` opens a read-only shared profile. |
+| `/discover` | 13-step visual questionnaire. Progress is saved in `localStorage`; `?step=N` jumps to a question. |
+| `/results` | Personalised home report. `#d=…` opens a read-only shared plan; legacy `?d=…` links remain readable. |
 | `/coming-soon` | Honest previews of future features, plus a working budget guide |
 | `/privacy`, `/terms`, `/contact` | Legal and support pages |
 | `/api/waitlist` | `POST` only. Validates the sign-up and inserts it into Supabase. |
@@ -65,7 +65,7 @@ The output is standard Next.js: static pages plus one route handler. It works on
 
 ## Notes
 
-- **Taste DNA engine:** `lib/taste-engine.ts` is deterministic weighted scoring. Disliked colour families are hard exclusions, the Depth tone always reaches at least 4.5:1 contrast with the Foundation, accents are softened to match boldness, and conflicting answers produce explicit "how we balanced your choices" notes.
+- **Taste and planning engine:** deterministic rules rank palettes, exclude disliked colour families from generated palettes and finishes, enforce tenure permissions, remove owned items, and rebalance non-essential purchases against the exact budget ceiling. Safety-critical unknowns are surfaced as constraints rather than guessed.
 - **Imagery:** Unsplash License photos (no Unsplash+ images). Credits are listed at `/terms#image-credits`.
 - **Rate limiting:** in memory and per instance, so it isn't shared between servers. Add Cloudflare rate-limiting rules or Turnstile if spam appears.
 - **Future work:** see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

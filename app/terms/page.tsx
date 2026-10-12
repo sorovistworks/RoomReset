@@ -8,20 +8,21 @@ export const metadata: Metadata = { title: "Terms of use" };
 export default function TermsPage() {
   const credits = [...new Map(Object.values(PHOTOS).map((p) => [p.credit, p])).keys()].sort();
   return (
-    <LegalPage eyebrow="Terms" title="Terms of use." updated="11 October 2026">
+    <LegalPage eyebrow="Terms" title="Terms of use." updated="12 October 2026">
       <p>By using RoomReset you agree to these terms. They&apos;re short, because the product is simple today.</p>
 
       <h2>What RoomReset offers today</h2>
       <p>
-        RoomReset currently offers a free Taste DNA questionnaire and personalised home plan, plus an early-access list. AI room makeovers, shopping,
-        budget plans and design refinements are in development and clearly marked &ldquo;Coming soon&rdquo;. Nothing on the site can be purchased, and no
+        RoomReset currently offers a free Taste DNA questionnaire and personalised home plan, including an illustrative budget section, plus an early-access list. AI room makeovers, catalogue shopping
+        and interactive design refinements are in development and clearly marked &ldquo;Coming soon&rdquo;. Nothing on the site can be purchased, and no
         payment is ever requested.
       </p>
 
       <h2>Design suggestions</h2>
       <p>
-        Your home plan is general guidance, generated from your answers by fixed rules. Prices are approximate. It is not professional advice for your specific property.
-        Always check your tenancy agreement before making changes to a rented home.
+        Your home plan is general guidance, generated from your answers by fixed rules. Prices are illustrative rather than live quotes. It is not professional advice for your specific property,
+        medical needs or accessibility requirements. Check your tenancy agreement and written permissions before changing a rented home, and use qualified professionals for electrical, plumbing,
+        structural and individual accessibility work.
       </p>
 
       <h2>Imagery</h2>

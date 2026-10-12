@@ -1,6 +1,6 @@
 import { EMPTY_ANSWERS, isComplete, sanitizeAnswers, STEP_COUNT, STYLES, type Answers, type StyleId } from "./taste-data";
 
-// Browser-only quiz answers (taste, home and routine — no name or email). Only the style id leaves the browser, and only on waitlist sign-up.
+// Browser-only quiz answers (taste, home and routine — no name or email). A person can deliberately put the answers in a URL fragment to share a plan.
 const KEY = "roomreset:taste:v1";
 const SOURCE_KEY = "roomreset:source";
 
@@ -25,11 +25,12 @@ export function loadSaved(): Saved | null {
   }
 }
 
-export function saveProgress(s: Saved) {
+export function saveProgress(s: Saved): boolean {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
+    return true;
   } catch {
-    // Private mode or full storage: the questionnaire still works for this visit.
+    return false;
   }
 }
 

@@ -8,7 +8,7 @@ import { ROOM_INPUTS } from "@/lib/room-inputs";
 
 export const metadata: Metadata = {
   title: "Coming soon",
-  description: "A preview of RoomReset AI makeovers, shop-the-look, budget plans and design refinements — what we're building, shown honestly.",
+  description: "A preview of RoomReset AI makeovers, shop-the-look and design refinements, plus a working category budget calculator.",
 };
 
 const PRODUCTS = [
@@ -37,8 +37,8 @@ export default function ComingSoonPage() {
           The future of your room, <em className="text-clay">previewed honestly.</em>
         </h1>
         <p className="rise mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft" style={{ animationDelay: "160ms" }}>
-          The features on this page are not live yet. Here&apos;s exactly what we&apos;re building, and how each one will use your Taste DNA. Taste DNA
-          itself is free and available today.
+          Most production features on this page are not live yet. The category budget calculator works now; the disabled controls and shopping cards are previews.
+          Taste DNA and its room-by-room plan are free and available today.
         </p>
         <nav aria-label="On this page" className="rise mt-10 flex flex-wrap gap-2 text-sm" style={{ animationDelay: "240ms" }}>
           {[
@@ -160,7 +160,7 @@ export default function ComingSoonPage() {
       <section id="budget" className="scroll-mt-20 border-y border-line bg-sand/40 py-20 sm:py-28">
         <div className="wrap">
           <SectionHeading eyebrow="Budget planner — try it now" title="Know where your money matters most.">
-            <p>A simple, working guide to splitting a rental-makeover budget. Room-specific plans will come with AI makeovers.</p>
+            <p>A simple, working category split for a rental makeover. The Taste DNA report already provides the more detailed room-by-room ceiling check.</p>
           </SectionHeading>
           <div className="mt-12">
             <BudgetPlanner />
@@ -191,7 +191,7 @@ export default function ComingSoonPage() {
         <div className="wrap grid gap-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SectionHeading eyebrow="Makeover plan — sample" title="A clear path from inspiration to finished room.">
-              <p>Personalised step-by-step plans are coming soon. Here&apos;s the kind of guide you&apos;ll receive — a general sample, not tailored to your room.</p>
+              <p>Photo-specific weekend makeover plans are coming soon; the Taste DNA report already includes a personalised move-in sequence. This is a general sample, not tailored to your room.</p>
             </SectionHeading>
           </div>
           <ol className="divide-y divide-line border-y border-line lg:col-span-7">
