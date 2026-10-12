@@ -35,7 +35,7 @@ export type Where = RoomId | ((c: Ctx) => RoomId);
 const EXTRA_BEDROOMS: Record<HomeSize, number> = { "1rk": 0, "1bhk": 0, "2bhk": 1, "3bhk": 2 };
 export function extraRooms(c: Ctx): RoomId[] {
   const free = EXTRA_BEDROOMS[c.home ?? "2bhk"] - (c.has("flatmates") ? 1 : 0);
-  const wanted = [c.has("elders") && "parents", c.has("kids") && "kids", (c.work === "wfh" || c.work === "hybrid") && "study", "guest", "study"].filter(Boolean) as RoomId[];
+  const wanted = [c.has("elders") && "parents", c.has("kids") && "kids", (c.work === "wfh" || c.work === "hybrid") && "study", c.guests !== "never" && "guest", "study"].filter(Boolean) as RoomId[];
   return [...new Set(wanted)].slice(0, Math.max(0, free));
 }
 export const hasRoom = (c: Ctx, room: RoomId) => extraRooms(c).includes(room);
@@ -252,7 +252,11 @@ export interface Essential {
 
 // Sized appliance and furniture prices re-checked 12 Oct 2026 against Indian listings (Smartprix, MySmartPrice, PriceDekho,
 // Reliance Digital, Flipkart, Amazon.in); rental from Rentomojo/Furlenco; designer fees from 2026 Indian pricing guides.
-const seats = (c: Ctx) => (c.people <= 4 ? 4 : c.people <= 6 ? 6 : 8);
+// Room for two more at the table when people often stay over.
+const seats = (c: Ctx) => {
+  const n = c.people + (c.guests === "often" ? 2 : 0);
+  return n <= 4 ? 4 : n <= 6 ? 6 : 8;
+};
 const dishwasherSize = (c: Ctx) => bySize(c, "An 8-place compact model is enough.", "Get 12 place settings for three or four people.", "Get 14 place settings — it'll run once a day.");
 const sofaAdvice = (c: Ctx) =>
   [
@@ -295,10 +299,11 @@ export const ESSENTIALS: Essential[] = [
 
   // Study
   { room: "study", name: "Bookshelf", cost: "₹2.5k–8k", verdict: (c) => (hasRoom(c, "study") ? ["later", "Closed doors below hide cables and files; open shelves above for books."] : null) },
-  { room: "study", name: "Daybed for guests", cost: "₹18k–40k", verdict: (c) => (hasRoom(c, "study") ? ["later", "Turns the study into a guest room when family visits."] : null) },
+  { room: "study", name: "Daybed for guests", cost: "₹18k–40k", verdict: (c) => (!hasRoom(c, "study") || c.guests === "never" ? null : c.guests === "often" ? ["now", "Family stays often — the study doubles as their room."] : ["later", "Turns the study into a guest room when family visits."]) },
 
   // Guest room
-  { room: "guest", name: "Folding bed with mattress", cost: "₹5k–10k", verdict: (c) => (hasRoom(c, "guest") ? ["later", "Guests come a few times a year; it folds away the rest of the time."] : null) },
+  { room: "guest", name: "Folding bed with mattress", cost: "₹5k–10k", verdict: (c) => (hasRoom(c, "guest") && c.guests !== "often" ? ["later", "Guests come a few times a year; it folds away the rest of the time."] : null) },
+  { room: "guest", name: "Guest bed and mattress", cost: "₹14k–30k", verdict: (c) => (hasRoom(c, "guest") && c.guests === "often" ? ["now", "People stay often, so a proper single or double bed earns its place over a folding one."] : null) },
   { room: "guest", name: "Hooks and a luggage stand", cost: "₹1k–3k", verdict: (c) => (hasRoom(c, "guest") ? ["later", "Somewhere for bags and towels, so guests don't live out of a suitcase on the floor."] : null) },
 
   // Kitchen
@@ -329,8 +334,21 @@ export const ESSENTIALS: Essential[] = [
   { room: "bathroom", name: "Bathtub", cost: "₹25k+", verdict: (c) => (c.own && (c.budget === "high" || c.budget === "premium") ? ["skip", "Rarely used in Indian homes, and it eats space and water."] : null) },
 
   // Living room
-  { room: "living", name: "Sofa", cost: "₹20k–60k", verdict: (c) => (c.home === "1rk" ? ["skip", "Your bed is the sofa — a sofa-cum-bed saves the floor."] : ["now", sofaAdvice(c)]) },
-  { room: "living", name: "Sofa-cum-bed", cost: "₹18k–40k", verdict: (c) => (c.home === "1rk" ? ["now", "Seating by day, a guest bed when family visits."] : c.home === "1bhk" ? ["later", "Handy when parents or friends stay over."] : null) },
+  { room: "living", name: "Sofa", cost: "₹20k–60k", verdict: (c) => (c.home !== "1rk" ? ["now", sofaAdvice(c)] : c.guests === "never" ? ["later", "A compact 2-seater or floor cushions, for when you want seating off the bed."] : ["skip", "Your bed is the sofa — a sofa-cum-bed saves the floor."]) },
+  { room: "living", name: "Sofa-cum-bed", cost: "₹18k–40k", verdict: (c) =>
+      c.guests === "never"
+        ? c.small
+          ? ["skip", "Nobody stays over, so the fold-out bed would go unused — a regular sofa sits better and costs less."]
+          : null
+        : c.home === "1rk"
+          ? ["now", "Seating by day, a guest bed when family visits."]
+          : c.home === "1bhk"
+            ? c.guests === "often"
+              ? ["now", "Family stays often — a sofa-cum-bed beats a mattress on the floor."]
+              : ["later", "Handy when parents or friends stay over."]
+            : c.guests === "often" && !hasRoom(c, "guest") && !hasRoom(c, "study")
+              ? ["now", "Family stays often and there's no spare room for them — this is your guest bed."]
+              : null },
   { room: "living", name: "Socket guards and corner protectors", core: true, cost: "₹250–1k", verdict: (c) => (c.has("kids") ? ["now", "Toddlers find sockets and table corners first — fit them before moving in."] : null) },
   { room: "living", name: "Closed shoe rack", cost: "₹2k–6k", verdict: (c) => ["now", `${c.vastu ? "Shoes come off at the door. Vastu: keep it to the south or west of the entrance, not the north-east." : "Shoes come off at the door — a closed rack keeps dust and smell in."}${c.people >= 3 ? " Pick 4+ shelves; shoes multiply fast with more people." : ""}`] },
   { room: "living", name: "Curtains (sheer + lined)", cost: "₹2k–6k per window", verdict: () => ["now", "Privacy and heat control from day one."] },

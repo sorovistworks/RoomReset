@@ -16,6 +16,7 @@ const base: Answers = {
   climate: "mild",
   household: ["partner"],
   people: null,
+  guests: null,
   work: "hybrid",
   cooking: "light",
   help: "maid",
@@ -93,6 +94,7 @@ test("avoided colours never outrank clean palettes, and nothing throws (500 rand
       climate: one(r, CLIMATES),
       household: pickSome(r, MEMBERS.map((m) => m.id), 3),
       people: r() < 0.5 ? null : 1 + Math.floor(r() * 8),
+      guests: [null, "never", "sometimes", "often"][Math.floor(r() * 4)] as Answers["guests"],
       work: one(r, WORKS),
       cooking: one(r, COOKING),
       help: one(r, HELPS),
@@ -344,4 +346,29 @@ test("filler only appears where it's tempting, and renters aren't sold a solid-w
   const bedroomMaterials = (extra: Partial<Answers>) => plan(extra).rooms[0].materials.map((m) => m.name);
   assert.ok(!bedroomMaterials({ tenure: "rent", materials: ["linen"] }).includes("Solid sheesham or mango wood bed"));
   assert.ok(bedroomMaterials({ tenure: "rent", materials: ["wood"] }).includes("Solid sheesham or mango wood bed"));
+});
+
+test("how often people stay over decides the guest furniture", () => {
+  const plan = (guests: Answers["guests"], extra: Partial<Answers> = {}) => buildHomePlan({ ...base, household: [], work: "office", guests, ...extra });
+  // Nobody visits: no sofa-cum-bed, no guest room, no guest beds anywhere.
+  for (const home of ["1rk", "1bhk", "2bhk", "3bhk"] as const) {
+    const p = plan("never", { home });
+    assert.notEqual(verdictOf(p, "Sofa-cum-bed"), "now", home);
+    assert.notEqual(verdictOf(p, "Sofa-cum-bed"), "later", home);
+    assert.ok(!p.rooms.some((r) => r.id === "guest"), `${home} guest room`);
+    assert.ok(!all(p).some((n) => /Folding bed|Guest bed|Daybed/.test(n)), `${home} guest beds`);
+  }
+  assert.equal(verdictOf(plan("never", { home: "1rk" }), "Sofa"), "later"); // seating off the bed instead
+  // Visitors often: buy the sofa-cum-bed now, a proper guest bed, and two more seats at the table.
+  assert.equal(verdictOf(plan("often", { home: "1bhk" }), "Sofa-cum-bed"), "now");
+  assert.equal(verdictOf(plan("sometimes", { home: "1bhk" }), "Sofa-cum-bed"), "later");
+  assert.equal(verdictOf(plan(null, { home: "1bhk" }), "Sofa-cum-bed"), "later"); // unanswered keeps the old advice
+  assert.equal(verdictOf(plan("often", { home: "2bhk" }), "Guest bed and mattress"), "now");
+  assert.equal(verdictOf(plan("often", { home: "2bhk" }), "Folding bed with mattress"), undefined);
+  assert.equal(verdictOf(plan("often", { home: "2bhk", household: ["kids"] }), "Sofa-cum-bed"), "now"); // spare room taken
+  const table = (guests: Answers["guests"]) => plan(guests, { home: "2bhk", household: ["partner"], people: 4 }).rooms.flatMap((r) => r.buy.later).find((i) => i.name === "Dining table")!.why;
+  assert.match(table("sometimes"), /4-seater/);
+  assert.match(table("often"), /6-seater/);
+  // Old saves and share links without the answer stay valid.
+  assert.equal(sanitizeAnswers({ ...base, guests: "weekly" }).guests, null);
 });
