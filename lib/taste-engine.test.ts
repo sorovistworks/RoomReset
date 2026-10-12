@@ -16,6 +16,7 @@ const base: Answers = {
   climate: "mild",
   household: ["partner"],
   people: null,
+  guests: null,
   work: "hybrid",
   cooking: "light",
   help: "maid",

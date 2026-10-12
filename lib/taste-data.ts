@@ -328,6 +328,13 @@ export const CLIMATES: Option<Climate>[] = [
   { id: "hills", label: "Cool & hilly", hint: "Dehradun, Shimla, Shillong" },
 ];
 
+export type Guests = "never" | "sometimes" | "often";
+export const GUESTS: Option<Guests>[] = [
+  { id: "never", label: "Rarely or never", hint: "" },
+  { id: "sometimes", label: "A few times a year", hint: "" },
+  { id: "often", label: "Often", hint: "" },
+];
+
 export const MEMBERS: Option<Member>[] = [
   { id: "partner", label: "Partner", hint: "" },
   { id: "kids", label: "Kids", hint: "" },
@@ -464,6 +471,7 @@ export interface Answers {
   climate: Climate | null;
   household: Member[];
   people: number | null; // headcount including you; null = not given, so we estimate
+  guests: Guests | null; // how often people stay over; null = not answered (treated as "a few times a year")
   work: Work | null;
   cooking: Cooking | null;
   help: Help | null;
@@ -496,6 +504,7 @@ export const EMPTY_ANSWERS: Answers = {
   climate: null,
   household: [],
   people: null,
+  guests: null,
   work: null,
   cooking: null,
   help: null,
@@ -536,6 +545,7 @@ export function sanitizeAnswers(raw: unknown): Answers {
     balcony: r.balcony !== false,
     climate: one("climate"),
     household: list("household"),
+    guests: GUESTS.some((g) => g.id === r.guests) ? (r.guests as Guests) : null,
     people: Number.isInteger(r.people) && (r.people as number) >= 1 && (r.people as number) <= MAX_PEOPLE ? (r.people as number) : null,
     work: one("work"),
     cooking: one("cooking"),

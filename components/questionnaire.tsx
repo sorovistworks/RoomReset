@@ -45,6 +45,7 @@ import {
   COOKING,
   FIXTURES,
   fixtureOptions,
+  GUESTS,
   HELPS,
   HOMES,
   LIMITS,
@@ -384,6 +385,7 @@ export function Questionnaire() {
               <>
                 <Cards multi label="Who lives with you" options={MEMBERS} isOn={(id) => chosen("household", id)} onPick={(id) => toggle("household", id)} />
                 <Headcount a={a} set={set} />
+                <GuestsPicker a={a} set={set} />
               </>
             )}
 
@@ -600,6 +602,35 @@ function Progress({ step }: { step: number }) {
         {STEPS.map((_, i) => (
           <span key={i} className={`h-1 rounded-full transition-colors duration-500 ${i <= step ? "bg-ink" : "bg-line"} ${i === TASTE_STEPS ? "ml-1.5" : ""}`} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Optional: decides whether a sofa-cum-bed, guest room or guest bed is worth buying. Tap again to clear.
+function GuestsPicker({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => void }) {
+  return (
+    <div className="mt-4 rounded-3xl border border-line bg-paper p-6 sm:p-7">
+      <p id="guests-label" className="font-serif text-2xl">
+        Do family or friends stay over?
+      </p>
+      <p className="mt-1 text-sm leading-relaxed text-ink-soft">Optional. It decides whether a sofa-cum-bed or guest bed is worth buying.</p>
+      <div role="radiogroup" aria-labelledby="guests-label" className="mt-5 flex flex-wrap gap-2">
+        {GUESTS.map((g) => {
+          const on = a.guests === g.id;
+          return (
+            <button
+              key={g.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => set({ guests: on ? null : g.id })}
+              className={`min-h-11 rounded-full border px-5 text-sm transition ${on ? "border-ink bg-ink text-ivory" : "border-line bg-ivory hover:border-ink/40"}`}
+            >
+              {g.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
