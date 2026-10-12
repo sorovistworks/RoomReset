@@ -106,6 +106,19 @@
 .fade {
   animation: fade 0.6s ease both;
 }
+/* A few gentle nudges, then it rests — nothing keeps moving once you've scrolled on. */
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+.nudge {
+  animation: nudge 1.4s ease-in-out 1.2s 6;
+}
 
 @media (prefers-reduced-motion: reduce) {
   html {

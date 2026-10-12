@@ -87,7 +87,7 @@ const STEPS: { key: StepKey; title: string; hint: string; min?: number }[] = [
   { key: "home", title: "Tell us about your new home.", hint: "Unfurnished and ready to set up." },
   { key: "fixtures", title: "What's already in your flat?", hint: "Your palettes will work with what you can't change. Pick the closest match." },
   { key: "climate", title: "What's the weather like where you live?", hint: "It decides which materials survive — and which swell, rust or mould." },
-  { key: "household", title: "Who lives with you?", hint: "Optional. Choose everyone who applies — skip if it's just you.", min: 0 },
+  { key: "household", title: "Who lives with you?", hint: "Choose everyone who applies — or Only me.", min: 1 },
   { key: "work", title: "What do your weekdays look like?", hint: "So we know how much time the house really gets." },
   { key: "cooking", title: "How much do you cook?", hint: "This changes the whole kitchen." },
   { key: "help", title: "Do you have help at home?", hint: "We'll suggest what to hand over — to people or machines." },
@@ -103,6 +103,7 @@ const ICONS: Record<string, LucideIcon> = {
   "hot-dry": ThermometerSun,
   mild: CloudSun,
   hills: Mountain,
+  "only-me": User,
   partner: Heart,
   kids: Baby,
   elders: HeartHandshake,
@@ -123,11 +124,15 @@ const ICONS: Record<string, LucideIcon> = {
 
 const CHOICE_LISTS: Record<Exclude<ChoiceKey, "tenure" | "home">, Option<string>[]> = { climate: CLIMATES, work: WORKS, cooking: COOKING, help: HELPS, budget: BUDGETS };
 
+// "Only me" isn't a member: it's no other people (pets can still live with you) and a headcount of one.
+const livesAlone = (a: Answers) => a.people === 1 && !a.household.some((m) => m !== "pets");
+const ONLY_ME: Option<string> = { id: "only-me", label: "Only me", hint: "" };
+
 function stepValid(key: StepKey, a: Answers): boolean {
   if (key === "boldness") return true;
   if (key === "home") return a.tenure !== null && a.home !== null && a.balcony !== null;
   if (key === "fixtures") return FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id));
-  if (key === "household") return a.people === null || a.people >= minPeople(a.household);
+  if (key === "household") return (livesAlone(a) || a.household.some((m) => m !== "pets")) && (a.people === null || a.people >= minPeople(a.household));
   if (key === "help") return a.help !== null;
   if (key === "budget") return a.budget !== null;
   if (key in LIMITS) return (a[key as ListKey] as string[]).length >= (STEPS.find((s) => s.key === key)?.min ?? 0);
@@ -195,7 +200,8 @@ export function Questionnaire() {
     }
     if (list.length >= LIMITS[key]) return setNotice(`You can choose up to ${LIMITS[key]}. Deselect one to swap it.`);
     setNotice("");
-    set({ [key]: [...list, id] });
+    // Adding a person after "Only me" drops the headcount of one back to an estimate.
+    set({ [key]: [...list, id], ...(key === "household" && id !== "pets" && livesAlone(a) ? { people: null } : {}) });
   }
 
   const isList = step.key in LIMITS;
@@ -213,7 +219,7 @@ export function Questionnaire() {
           : step.key === "fixtures"
             ? "Choose an option for each surface to continue."
             : step.key === "household"
-              ? "The headcount can't be lower than the people you picked."
+              ? "Choose who lives with you — or Only me."
               : step.key === "help"
                 ? "Choose an option to continue."
                 : step.key === "budget"
@@ -456,8 +462,14 @@ export function Questionnaire() {
 
             {step.key === "household" && (
               <>
-                <Cards multi label="Who lives with you" options={MEMBERS} isOn={(id) => chosen("household", id)} onPick={(id) => toggle("household", id)} />
-                <Headcount a={a} set={set} />
+                <Cards
+                  multi
+                  label="Who lives with you"
+                  options={[ONLY_ME, ...MEMBERS]}
+                  isOn={(id) => (id === "only-me" ? livesAlone(a) : chosen("household", id))}
+                  onPick={(id) => (id === "only-me" ? set({ household: a.household.filter((m) => m === "pets"), people: 1, childAges: [] }) : toggle("household", id))}
+                />
+                {!livesAlone(a) && <Headcount a={a} set={set} />}
                 {a.household.includes("kids") && <PillPicker label="What age groups are the children?" hint="This changes bunk-bed, socket and storage advice." options={CHILD_AGES} values={a.childAges} onChange={(childAges) => set({ childAges })} />}
                 {a.household.includes("pets") && <PillPicker label="Which pets live here?" hint="Plant and material advice is filtered for them." options={PET_TYPES} values={a.petTypes} onChange={(petTypes) => set({ petTypes })} />}
                 <PillPicker label="Any needs the plan must respect?" hint="Optional. Choose needs, not age labels." options={HOUSEHOLD_NEEDS} values={a.householdNeeds} onChange={(householdNeeds) => set({ householdNeeds })} />
@@ -503,7 +515,7 @@ export function Questionnaire() {
             {notice}
           </p>
           <button type="button" onClick={() => go(1)} aria-disabled={!valid} className={buttonClass("primary", `px-6 ${valid ? "" : "opacity-50"}`)}>
-            {last ? "See my home plan" : optional && !count ? (step.key === "household" ? (peopleCount(a) > 1 ? "Continue" : "Just me") : "Skip") : "Continue"}
+            {last ? "See my home plan" : optional && !count ? "Skip" : "Continue"}
             <ArrowRight className="size-4" aria-hidden />
           </button>
         </div>

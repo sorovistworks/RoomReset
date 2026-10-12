@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, ClipboardList, Copy, Globe, Lock, Pencil, RotateCcw, Share2, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, ClipboardList, Copy, Globe, Lock, Pencil, RotateCcw, Share2, X } from "lucide-react";
 import { PHOTOS } from "@/lib/photos";
 import { clearSaved, loadSaved, saveProgress } from "@/lib/storage";
 import { buildHomePlan, type HomePlan, type Item, type RankedPalette } from "@/lib/home-plan";
@@ -104,7 +104,13 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
               </li>
             ))}
           </ul>
-          {!shared && <Actions answers={answers} plan={p} />}
+          {/* The actions live at the end of the report; up here, invite people to read it first. */}
+          <a href="#your-plan" className="rise group mt-10 inline-flex items-center gap-3 text-sm font-medium" style={{ animationDelay: "240ms" }}>
+            <span className="flex size-11 items-center justify-center rounded-full border border-ink/70 transition-colors group-hover:bg-ink group-hover:text-ivory">
+              <ArrowDown className="nudge size-4" aria-hidden />
+            </span>
+            {shared ? "Scroll to see their plan" : "Scroll to see your plan"}
+          </a>
         </div>
         <figure className="rise lg:col-span-5" style={{ animationDelay: "200ms" }}>
           <MiniRoom colours={top.room} className="aspect-4/3 rounded-4xl" />
@@ -137,7 +143,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
       )}
 
       {/* 1. Palettes */}
-      <section className="bg-paper py-20 sm:py-28" aria-labelledby="palettes">
+      <section id="your-plan" className="scroll-mt-16 bg-paper py-20 sm:py-28" aria-labelledby="palettes">
         <div className="wrap">
           <div className="max-w-2xl">
             <Eyebrow>Your top five palettes</Eyebrow>
@@ -310,6 +316,18 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
         Prices are illustrative Indian market ranges, not live quotes, and vary by city, scope and brand. This is general guidance, not a medical or accessibility
         assessment — check permissions and use qualified professionals for electrical, plumbing, structural and individual accessibility work.
       </p>
+
+      {!shared && (
+        <section className="wrap pt-16" aria-labelledby="ready">
+          <div className="rounded-4xl border border-line bg-paper p-7 sm:p-10">
+            <Eyebrow>Your plan, ready to use</Eyebrow>
+            <h2 id="ready" className="display mt-4 text-3xl sm:text-4xl">
+              Share it, copy the checklist, or fine-tune your answers.
+            </h2>
+            <Actions answers={answers} plan={p} />
+          </div>
+        </section>
+      )}
 
       {/* Future */}
       <section className="py-20 sm:py-28" aria-labelledby="future">
@@ -697,7 +715,7 @@ function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
   }
 
   return (
-    <div className="rise mt-10" style={{ animationDelay: "240ms" }}>
+    <div className="mt-8">
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={share} className={buttonClass("primary", "px-5")}>
           <Share2 className="size-4" aria-hidden /> {confirmShare ? "Share answers in link" : "Share my plan"}
