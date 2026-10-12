@@ -21,9 +21,11 @@ import {
   House,
   KeyRound,
   Laptop,
+  Minus,
   MoonStar,
   Mountain,
   PawPrint,
+  Plus,
   Sparkles,
   ThermometerSun,
   User,
@@ -47,9 +49,12 @@ import {
   HOMES,
   LIMITS,
   MATERIALS,
+  MAX_PEOPLE,
   MEMBERS,
+  minPeople,
   MOODS,
   normaliseHex,
+  peopleCount,
   STEP_COUNT,
   STYLES,
   TENURES,
@@ -346,6 +351,18 @@ export function Questionnaire() {
                     })}
                   </div>
                 </div>
+                <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  aria-pressed={a.balcony}
+                  onClick={() => set({ balcony: !a.balcony })}
+                  className={`flex min-h-14 items-center gap-3 rounded-full border py-2 pl-3 pr-6 text-left text-sm transition ${a.balcony ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
+                >
+                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border ${a.balcony ? "border-ivory bg-ivory text-ink" : "border-line"}`}>
+                    {a.balcony && <Check className="size-4" aria-hidden />}
+                  </span>
+                  There&apos;s a balcony <span className={a.balcony ? "text-ivory/70" : "text-ink-soft"}>— the washer and drying move indoors if not</span>
+                </button>
                 <button
                   type="button"
                   aria-pressed={a.vastu}
@@ -357,13 +374,17 @@ export function Questionnaire() {
                   </span>
                   Include Vastu tips <span className={a.vastu ? "text-ivory/70" : "text-ink-soft"}>— optional</span>
                 </button>
+                </div>
               </div>
             )}
 
             {step.key === "fixtures" && <Fixtures a={a} set={set} />}
 
             {step.key === "household" && (
-              <Cards multi label="Who lives with you" options={MEMBERS} isOn={(id) => chosen("household", id)} onPick={(id) => toggle("household", id)} />
+              <>
+                <Cards multi label="Who lives with you" options={MEMBERS} isOn={(id) => chosen("household", id)} onPick={(id) => toggle("household", id)} />
+                <Headcount a={a} set={set} />
+              </>
             )}
 
             {step.key in CHOICE_LISTS && (
@@ -389,7 +410,7 @@ export function Questionnaire() {
             {notice}
           </p>
           <button type="button" onClick={() => go(1)} aria-disabled={!valid} className={buttonClass("primary", `px-6 ${valid ? "" : "opacity-50"}`)}>
-            {last ? "See my home plan" : optional && !count ? (step.key === "household" ? "Just me" : "Skip") : "Continue"}
+            {last ? "See my home plan" : optional && !count ? (step.key === "household" ? (peopleCount(a) > 1 ? "Continue" : "Just me") : "Skip") : "Continue"}
             <ArrowRight className="size-4" aria-hidden />
           </button>
         </div>
@@ -579,6 +600,37 @@ function Progress({ step }: { step: number }) {
         {STEPS.map((_, i) => (
           <span key={i} className={`h-1 rounded-full transition-colors duration-500 ${i <= step ? "bg-ink" : "bg-line"} ${i === TASTE_STEPS ? "ml-1.5" : ""}`} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Sizes the fridge, washer, geyser and table. Starts from an estimate; can't go below the people already picked.
+function Headcount({ a, set }: { a: Answers; set: (patch: Partial<Answers>) => void }) {
+  const min = minPeople(a.household);
+  const n = peopleCount(a);
+  const change = (d: number) => set({ people: Math.min(MAX_PEOPLE, Math.max(min, n + d)) });
+  const step = "flex size-12 items-center justify-center rounded-full border border-line bg-ivory transition-colors hover:border-ink/40 disabled:cursor-not-allowed disabled:opacity-40";
+  return (
+    <div className="mt-8 flex flex-col gap-5 rounded-3xl border border-line bg-paper p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+      <div>
+        <p id="people-label" className="font-serif text-2xl">
+          How many people live here, including you?
+        </p>
+        <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-soft">
+          {a.people === null && n > 1 ? "Our guess from your picks. Adjust it so the fridge, washer and geyser are the right size, and count live-in help." : "The fridge, washer, geyser and dining table are sized for this. Count live-in help too."}
+        </p>
+      </div>
+      <div role="group" aria-labelledby="people-label" className="flex items-center gap-4 self-start sm:self-auto">
+        <button type="button" onClick={() => change(-1)} disabled={n <= min} aria-label="One person fewer" className={step}>
+          <Minus className="size-4" aria-hidden />
+        </button>
+        <output aria-live="polite" className="w-10 text-center font-serif text-4xl tabular-nums">
+          {n}
+        </output>
+        <button type="button" onClick={() => change(1)} disabled={n >= MAX_PEOPLE} aria-label="One person more" className={step}>
+          <Plus className="size-4" aria-hidden />
+        </button>
       </div>
     </div>
   );

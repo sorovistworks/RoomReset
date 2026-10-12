@@ -460,8 +460,10 @@ export interface Answers {
   tenure: Tenure | null;
   home: HomeSize | null;
   vastu: boolean;
+  balcony: boolean;
   climate: Climate | null;
   household: Member[];
+  people: number | null; // headcount including you; null = not given, so we estimate
   work: Work | null;
   cooking: Cooking | null;
   help: Help | null;
@@ -471,6 +473,14 @@ export interface Answers {
 }
 
 export const STEP_COUNT = 13;
+
+// Headcount. Each person-type you pick means at least one more person (pets don't count).
+export const MAX_PEOPLE = 12;
+export const minPeople = (household: Member[]) => 1 + household.filter((m) => m !== "pets").length;
+// With no count given, kids, parents and flatmates are assumed to come in twos.
+export const estimatePeople = (household: Member[]) =>
+  1 + (household.includes("partner") ? 1 : 0) + 2 * household.filter((m) => m === "kids" || m === "elders" || m === "flatmates").length;
+export const peopleCount = (a: Pick<Answers, "household" | "people">) => Math.max(a.people ?? estimatePeople(a.household), minPeople(a.household));
 export const LIMITS = { styles: 3, moods: 2, avoidColours: 6, materials: 5, household: 5 } as const;
 
 export const EMPTY_ANSWERS: Answers = {
@@ -482,8 +492,10 @@ export const EMPTY_ANSWERS: Answers = {
   tenure: null,
   home: null,
   vastu: false,
+  balcony: true,
   climate: null,
   household: [],
+  people: null,
   work: null,
   cooking: null,
   help: null,
@@ -521,8 +533,10 @@ export function sanitizeAnswers(raw: unknown): Answers {
     tenure: one("tenure"),
     home: one("home"),
     vastu: r.vastu === true,
+    balcony: r.balcony !== false,
     climate: one("climate"),
     household: list("household"),
+    people: Number.isInteger(r.people) && (r.people as number) >= 1 && (r.people as number) <= MAX_PEOPLE ? (r.people as number) : null,
     work: one("work"),
     cooking: one("cooking"),
     help: one("help"),

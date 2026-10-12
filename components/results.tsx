@@ -14,8 +14,11 @@ import { WaitlistForm } from "./waitlist-form";
 
 type View = { kind: "loading" } | { kind: "empty" } | { kind: "partial"; step: number } | { kind: "ready"; answers: Answers; shared: boolean };
 
-const BUDGET_COLOURS = ["#5C4033", "#B86B4B", "#B5BFA4", "#C19A6B", "#6F7148"];
+const BUDGET_COLOURS = ["#5C4033", "#B86B4B", "#B5BFA4", "#C19A6B", "#6F7148", "#8C6A55", "#D4B48C"];
 const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+// ₹2.2 lakh / ₹85k — short enough to read inside a sentence.
+const short = (n: number) => (n >= 100_000 ? `₹${(n / 100_000).toFixed(1).replace(/\.0$/, "")} lakh` : `₹${Math.round(n / 1000)}k`);
+const span = ([lo, hi]: [number, number]) => (lo >= 100_000 ? `₹${(lo / 100_000).toFixed(1).replace(/\.0$/, "")}–${short(hi).slice(1)}` : `${short(lo)}–${short(hi).slice(1)}`);
 
 export function Results() {
   const [view, setView] = useState<View>({ kind: "loading" });
@@ -213,8 +216,13 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
             <h2 id="budget" className="display mt-4 text-4xl">
               About {inr.format(p.budget.total)} in all.
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-              A rough starting split for “{p.budget.label}”, including the appliances that live in each room. Spend on what you touch daily — the mattress, the sofa, the kitchen — and save on décor.
+            <p className="mt-4 text-sm leading-relaxed text-ink-soft">A rough starting split for “{p.budget.label}”, including the appliances that live in each room.</p>
+            <p className="mt-4 leading-relaxed">
+              {p.budget.fit === "fits"
+                ? `Your buy-now list comes to about ${span(p.budget.cost.now)}, so it fits, with roughly ${short(p.budget.total - p.budget.cost.now[1])} left for months one to three (${span(p.budget.cost.later)}).`
+                : p.budget.fit === "stretch"
+                  ? `Your buy-now list runs ${span(p.budget.cost.now)}. It fits ${short(p.budget.total)} if you choose the lower-priced options; months one to three add ${span(p.budget.cost.later)}.`
+                  : `Your buy-now list runs ${span(p.budget.cost.now)}, more than ${short(p.budget.total)}. Months one to three add ${span(p.budget.cost.later)}.`}
             </p>
           </div>
           <div className="lg:col-span-7">
@@ -234,6 +242,44 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
                 </div>
               ))}
             </dl>
+          </div>
+        </div>
+
+        <div className="wrap mt-14">
+          <div className="grid gap-10 border-t border-line pt-12 lg:grid-cols-12">
+            {p.budget.postpone.length > 0 && (
+              <div className="lg:col-span-4">
+                <h3 className="eyebrow">If you need to trim</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-soft">These are the biggest buy-now items that aren&apos;t day-one essentials. Move them to later first.</p>
+                <ul className="mt-5 divide-y divide-line border-y border-line">
+                  {p.budget.postpone.map((i) => (
+                    <li key={i.name} className="flex items-baseline justify-between gap-4 py-3 text-sm">
+                      <span>{i.name}</span>
+                      <span className="shrink-0 tabular-nums text-ink-soft">{i.cost}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className={`grid gap-10 ${new Set(p.budget.tips.map((t) => t.kind)).size > 1 ? "sm:grid-cols-2" : "max-w-2xl"} ${p.budget.postpone.length ? "lg:col-span-8" : "lg:col-span-12"}`}>
+              {(["spend", "save"] as const).map((kind) => {
+                const tips = p.budget.tips.filter((t) => t.kind === kind);
+                return tips.length ? (
+                  <div key={kind}>
+                    <h3 className="eyebrow">{kind === "spend" ? "Where to spend" : "Where to save"}</h3>
+                    <ul className="mt-5 space-y-4">
+                      {tips.map((t) => (
+                        <li key={t.text} className="flex gap-4 text-[0.95rem] leading-relaxed">
+                          <span aria-hidden className="mt-3 h-px w-5 shrink-0 bg-clay" />
+                          {t.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null;
+              })}
+            </div>
+            <p className="text-xs text-ink-soft lg:col-span-12">Totals count one of each item; fans and curtains are priced per piece.</p>
           </div>
         </div>
       </section>
@@ -381,6 +427,20 @@ function Rooms({ plan }: { plan: HomePlan }) {
           </p>
         </div>
 
+        {room.look.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-line p-5 sm:p-6">
+            <h3 className="eyebrow">The look</h3>
+            <ul className="mt-3 space-y-2">
+              {room.look.map((t) => (
+                <li key={t} className="flex gap-3 text-[0.95rem] leading-relaxed">
+                  <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-clay" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
           <BuyColumn title="Buy now" note="Needed from day one" items={room.buy.now} tone="now" />
           <BuyColumn title="Buy later" note="Once you've lived in it" items={room.buy.later} tone="later" />
@@ -388,7 +448,7 @@ function Rooms({ plan }: { plan: HomePlan }) {
         </div>
 
         <div className="mt-14 grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+          <div className={`lg:col-span-5 ${room.materials.length ? "" : "hidden"}`}>
             <h3 className="eyebrow">Material priority</h3>
             <ol className="mt-5 divide-y divide-line border-y border-line">
               {room.materials.map((m, i) => (
