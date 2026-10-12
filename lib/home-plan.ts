@@ -1,5 +1,12 @@
 import {
+  boldLook,
+  BUDGET_TIPS,
   CHECKS,
+  EXTRA_LOOK,
+  MOOD_LOOK,
+  roomsFor,
+  STYLE_LOOK,
+  type Where,
   CHORES,
   COLOUR_USE,
   ESSENTIALS,
@@ -25,6 +32,8 @@ import {
   HOMES,
   NONE,
   MOODS,
+  peopleCount,
+  minPeople,
   sanitizeAnswers,
   TENURES,
   UNDECIDED,
@@ -39,6 +48,7 @@ export interface Item {
   name: string;
   cost: string;
   why: string;
+  core?: boolean;
 }
 
 export interface Chip {
@@ -59,6 +69,7 @@ export interface RoomPlan {
   id: RoomId;
   name: string;
   colourUse: string;
+  look: string[]; // what your taste means here: the pieces to look for, then how it should feel
   materials: { name: string; why: string }[];
   buy: Record<Verdict, Item[]>;
   dos: string[];
@@ -77,8 +88,33 @@ export interface HomePlan {
   hoursFreed: number;
   choreHeadline: string;
   checks: string[];
-  budget: { total: number; label: string; rooms: { id: RoomId; name: string; share: number; amount: number }[] };
+  budget: {
+    total: number;
+    label: string;
+    rooms: { id: RoomId; name: string; share: number; amount: number }[];
+    // What the buy-now and months-one-to-three lists add up to, and how the buy-now list sits against the budget.
+    cost: Record<"now" | "later", [number, number]>;
+    fit: "fits" | "stretch" | "over";
+    postpone: Item[]; // when it doesn't fit: the priciest buy-now items that aren't day-one essentials
+    tips: { kind: "spend" | "save"; text: string }[];
+  };
 }
+
+const UNIT = { k: 1_000, L: 100_000 } as const;
+// "₹18k–45k", "₹60k–1.5L", "₹800–2k" → rupees. shortcut: "each" / "per window" prices count once; add a quantity field if that skews totals.
+export function costRange(cost: string): [number, number] | null {
+  const m = cost.match(/₹([\d.]+)(k|L)?–([\d.]+)(k|L)?/);
+  if (!m) return null;
+  return [Number(m[1]) * (m[2] ? UNIT[m[2] as keyof typeof UNIT] : 1), Number(m[3]) * (m[4] ? UNIT[m[4] as keyof typeof UNIT] : 1)];
+}
+
+const sumCost = (items: Item[]): [number, number] => {
+  const [lo, hi] = items.reduce(([a, b], i) => {
+    const r = costRange(i.cost);
+    return r ? [a + r[0], b + r[1]] : [a, b];
+  }, [0, 0]);
+  return [Math.round(lo / 1000) * 1000, Math.round(hi / 1000) * 1000];
+};
 
 const rgb = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
@@ -95,6 +131,9 @@ export function undertone(hex: string): "warm" | "cool" | "neutral" {
   if (Math.max(r, g, b) - Math.min(r, g, b) < 15) return b > r ? "cool" : "neutral";
   return r > b ? "warm" : "cool";
 }
+
+// Alone or with a partner, the estimate is exact; kids, parents or flatmates make it a guess unless counted.
+const estimateExact = (c: Ctx) => (c.household.every((m) => m === "partner" || m === "pets") ? minPeople(c.household) : -1);
 
 export function context(input: Answers): Ctx {
   const a = sanitizeAnswers(input);
@@ -116,6 +155,8 @@ export function context(input: Answers): Ctx {
     loves: (m) => a.materials.includes(m),
     fix,
     paint: a.tenure === "own" || a.repaint || fix.walls === null,
+    people: peopleCount(a),
+    counted: a.people !== null,
   };
 }
 
@@ -261,21 +302,35 @@ export function buildHomePlan(input: Answers): HomePlan {
   const walls = c.paint ? `${names[0]} walls` : `Your walls stay as they are — ${names[0]} goes into rugs and throws`;
   const finishes = suggestFinishes(c, top);
 
-  const rooms = ROOMS.map((r): RoomPlan => {
+  // Where advice lands in this home: a 1RK folds the living room into its one room; no balcony drops balcony-only advice.
+  const at = (where: Where): RoomId | null => {
+    const room = typeof where === "function" ? where(c) : where;
+    return room === "living" && c.home === "1rk" ? "bedroom" : room === "balcony" && !c.balcony ? null : room;
+  };
+  const style = primaryStyle(c);
+  const look = (id: RoomId): string[] => {
+    const main = id === "living" || (id === "bedroom" && c.home === "1rk"); // where the mood and pattern advice lives
+    const piece = EXTRA_LOOK[id] ?? STYLE_LOOK[style][id as keyof (typeof STYLE_LOOK)[typeof style]];
+    return [piece, ...(main ? [...c.moods.map((m) => MOOD_LOOK[m]), boldLook(c.boldness)] : [])].filter(Boolean);
+  };
+
+  const rooms = roomsFor(c).map((id): RoomPlan => {
+    const r = { id, name: id === "bedroom" && c.home === "1rk" ? "Your room" : ROOMS.find((x) => x.id === id)!.name };
     const materials = MATERIAL_TIPS.map((m, i) => ({ m, i, up: Number(m.up?.(c) ?? false) }))
-      .filter(({ m }) => m.room === r.id && (!m.when || m.when(c)))
+      .filter(({ m }) => at(m.room) === r.id && (!m.when || m.when(c)))
       .sort((x, y) => y.up - x.up || x.i - y.i)
       .slice(0, 5)
       .map(({ m }) => ({ name: m.name, why: m.why }));
     const buy: Record<Verdict, Item[]> = { now: [], later: [], skip: [] };
     for (const e of ESSENTIALS) {
-      const v = e.room === r.id ? e.verdict(c) : null;
-      if (v) buy[v[0]].push({ name: e.name, cost: e.cost, why: v[1] });
+      const v = at(e.room) === r.id ? e.verdict(c) : null;
+      if (v) buy[v[0]].push({ name: e.name, cost: typeof e.cost === "function" ? e.cost(c) : e.cost, why: v[1], core: e.core });
     }
-    const tips = TIPS.filter((t) => t.room === r.id && (!t.when || t.when(c)));
+    const tips = TIPS.filter((t) => at(t.room) === r.id && (!t.when || t.when(c)));
     return {
       ...r,
       colourUse: COLOUR_USE[r.id](names, c, walls),
+      look: look(r.id),
       materials,
       buy,
       dos: tips.filter((t) => t.kind === "do").map((t) => t.text),
@@ -296,11 +351,13 @@ export function buildHomePlan(input: Answers): HomePlan {
         : `You have time on your side, so keep the easy chores — here's where help pays off first.`;
 
   const budget = BUDGETS.find((b) => b.id === c.budget) ?? BUDGETS[1];
-  const shares = roomShares(c);
+  const shares = roomShares(c, rooms.map((r) => r.id));
+  const cost = { now: sumCost(rooms.flatMap((r) => r.buy.now)), later: sumCost(rooms.flatMap((r) => r.buy.later)) };
+  const fit = cost.now[1] <= budget.total ? "fits" : cost.now[0] <= budget.total ? "stretch" : "over";
 
   return {
     primaryStyle: primaryStyle(c),
-    summary: [label(TENURES, c.tenure), label(HOMES, c.home), label(CLIMATES, c.climate), label(WORKS, c.work), label(COOKING, c.cooking)].filter((x) => x !== undefined),
+    summary: [label(TENURES, c.tenure), label(HOMES, c.home), c.people === 1 ? "Just you" : c.counted || c.people === estimateExact(c) ? `${c.people} people` : `About ${c.people} people`, label(CLIMATES, c.climate), label(WORKS, c.work), label(COOKING, c.cooking)].filter((x) => x !== undefined),
     palettes,
     fixtureNotes: FIXTURE_NOTES.filter((n) => n.when(c)).map((n) => n.text),
     finishes,
@@ -313,7 +370,18 @@ export function buildHomePlan(input: Answers): HomePlan {
     budget: {
       total: budget.total,
       label: budget.label,
-      rooms: ROOMS.map((r) => ({ ...r, share: shares[r.id], amount: Math.round((budget.total * shares[r.id]) / 100 / 1000) * 1000 })),
+      rooms: rooms.map(({ id, name }) => ({ id, name, share: shares[id]!, amount: Math.round((budget.total * shares[id]!) / 100 / 1000) * 1000 })),
+      cost,
+      fit,
+      postpone:
+        fit === "fits"
+          ? []
+          : rooms
+              .flatMap((r) => r.buy.now)
+              .filter((i) => !i.core && costRange(i.cost))
+              .sort((a, b) => costRange(b.cost)![1] - costRange(a.cost)![1])
+              .slice(0, 3),
+      tips: BUDGET_TIPS.filter((t) => t.when(c)).map(({ kind, text }) => ({ kind, text })),
     },
   };
 }
