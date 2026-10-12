@@ -88,6 +88,76 @@ export function MiniRoom({ colours, className = "" }: { colours: string[]; class
   );
 }
 
+// Illustrative CSS bedroom: [wall, bedding, frame, throw, art, floor?, door?, curtain].
+export function MiniBedroom({ colours, className = "" }: { colours: string[]; className?: string }) {
+  const [wall, bedding, frame, accent, art, floor, door, curtain] = colours;
+  const t = "transition-colors duration-700";
+  return (
+    <div className={`relative overflow-hidden ${t} ${className}`} style={{ background: wall }} aria-hidden>
+      <div className={`absolute inset-x-0 bottom-0 h-[22%] ${floor ? "" : "bg-black/6"}`} style={floor ? { background: floor } : undefined} />
+      {door && <div className="absolute bottom-[22%] left-[2%] h-[58%] w-[8%] rounded-t-sm border-2 border-black/10" style={{ background: door }} />}
+      <div className="absolute right-[7%] top-[12%] h-[44%] w-[20%] bg-white/55" />
+      <div className={`absolute right-[22%] top-[10%] h-[50%] w-[6%] rounded-b-sm ${t}`} style={{ background: curtain }} />
+      <div className={`absolute right-[5%] top-[10%] h-[50%] w-[6%] rounded-b-sm ${t}`} style={{ background: curtain }} />
+      <div className="absolute right-[4%] top-[10%] h-[1.5%] w-[26%] bg-black/30" />
+      <div className={`absolute left-[27%] top-[13%] h-[18%] w-[18%] rounded-sm border-[5px] border-paper ${t}`} style={{ background: art }} />
+      <div className={`absolute bottom-[22%] left-[14%] h-[34%] w-[46%] rounded-t-2xl ${t}`} style={{ background: frame }} />
+      <div className="absolute bottom-[34%] left-[18%] h-[9%] w-[17%] rounded-lg bg-paper" />
+      <div className="absolute bottom-[34%] left-[39%] h-[9%] w-[17%] rounded-lg bg-paper" />
+      <div className={`absolute bottom-[33%] left-[30%] h-[9%] w-[9%] -rotate-6 rounded-lg ${t}`} style={{ background: accent }} />
+      <div className={`absolute bottom-[12%] left-[11%] h-[22%] w-[52%] rounded-xl ${t}`} style={{ background: bedding }} />
+      <div className={`absolute bottom-[12%] left-[48%] h-[22%] w-[9%] ${t}`} style={{ background: accent }} />
+      <div className={`absolute bottom-[8%] left-[12%] h-[5%] w-[50%] rounded-sm ${t}`} style={{ background: frame }} />
+      <div className={`absolute bottom-[12%] left-[65%] h-[16%] w-[10%] rounded-sm ${t}`} style={{ background: frame }} />
+      <div className="absolute bottom-[28%] left-[69.5%] h-[10%] w-0.5 bg-black/30" />
+      <div className={`absolute bottom-[37%] left-[66%] h-[8%] w-[8%] rounded-t-full ${t}`} style={{ background: art }} />
+    </div>
+  );
+}
+
+// Illustrative CSS kitchen: [wall, uppers ("" = open rack), lowers, backsplash, counter, runner, floor?], plus the recommended fridge and container colours.
+export function MiniKitchen({ colours, fridge, containers, className = "" }: { colours: string[]; fridge: string; containers: string[]; className?: string }) {
+  const [wall, uppers, lowers, splash, counter, runner, floor] = colours;
+  const [tin, lid1, lid2] = containers;
+  const t = "transition-colors duration-700";
+  const doors = (n: number) => Array.from({ length: n }, (_, i) => <span key={i} className="flex-1 border-r border-black/10 last:border-r-0" />);
+  return (
+    <div className={`relative overflow-hidden ${t} ${className}`} style={{ background: wall }} aria-hidden>
+      <div className={`absolute inset-x-0 bottom-0 h-[12%] ${floor ? "" : "bg-black/6"}`} style={floor ? { background: floor } : undefined} />
+      {uppers ? (
+        <>
+          <div className={`absolute left-[6%] top-[9%] flex h-[26%] w-[33%] rounded-sm ${t}`} style={{ background: uppers }}>{doors(2)}</div>
+          <div className={`absolute left-[61%] top-[9%] flex h-[26%] w-[15%] rounded-sm ${t}`} style={{ background: uppers }}>{doors(1)}</div>
+        </>
+      ) : (
+        [24, 34].map((top) => <div key={top} className="absolute left-[6%] h-[1.5%] w-[30%] bg-[#C9CBCC]" style={{ top: `${top}%` }} />)
+      )}
+      <div className="absolute left-[43%] top-[6%] h-[18%] w-[14%] bg-[#C9CBCC]" />
+      <div className="absolute left-[39%] top-[24%] h-[9%] w-[22%] bg-[#B7B9BA] [clip-path:polygon(18%_0,82%_0,100%_100%,0_100%)]" />
+      <div className={`absolute bottom-[45%] left-[6%] right-[24%] h-[16%] ${t}`} style={{ background: splash }} />
+      <div className="absolute bottom-[45.5%] left-[10%] h-[9%] w-[4.5%] rounded-t-md border border-black/10" style={{ background: tin }} />
+      {[lid1, lid2].map((lid, i) => (
+        <div key={i} className="absolute bottom-[45.5%] flex w-[4.5%] flex-col" style={{ left: `${16 + i * 6}%`, height: i ? "7%" : "10%" }}>
+          <span className="h-[22%] rounded-t-sm" style={{ background: lid }} />
+          <span className="flex-1 rounded-b-sm border border-black/10 bg-white/60" />
+        </div>
+      ))}
+      <div className="absolute bottom-[45%] left-[42%] h-[1.5%] w-[16%] rounded-sm bg-[#2B2A28]" />
+      <div className={`absolute bottom-[42%] left-[4%] right-[23%] h-[3.5%] rounded-sm ${t}`} style={{ background: counter }} />
+      <div className={`absolute bottom-[12%] left-[6%] right-[24%] flex h-[30%] ${t}`} style={{ background: lowers }}>{doors(4)}</div>
+      <div className="absolute bottom-[12%] right-[4%] flex h-[66%] w-[17%] flex-col rounded-md border border-black/15" style={{ background: fridge }}>
+        <span className="relative h-[38%] border-b border-black/15">
+          <span className="absolute bottom-[12%] left-[10%] h-[40%] w-[4%] rounded-full bg-black/25" />
+        </span>
+        <span className="relative flex-1">
+          <span className="absolute left-[10%] top-[10%] h-[30%] w-[4%] rounded-full bg-black/25" />
+        </span>
+      </div>
+      <div className={`absolute bottom-[3%] left-[13%] h-[6%] w-[44%] rounded-sm ${t}`} style={{ background: runner }} />
+    </div>
+  );
+}
+
 export function SectionHeading({
   eyebrow,
   title,

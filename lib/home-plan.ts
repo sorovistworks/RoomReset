@@ -64,6 +64,8 @@ export interface RankedPalette {
   palette: Palette;
   colours: { name: string; hex: string }[];
   room: string[]; // MiniRoom colours, shown with the person's own floor, doors and (fixed) walls
+  bedroom: string[]; // MiniBedroom: [wall, bedding, frame, throw, art, floor, door, curtain]
+  kitchen: string[]; // MiniKitchen: [wall, uppers ("" = open rack), lowers, backsplash, counter, runner, floor]; fridge and containers come from plan.kitchen
   why: string[];
   avoided: string[]; // colour names the person said they'd never want
   wallsFixed: boolean;
@@ -72,7 +74,7 @@ export interface RankedPalette {
 export interface RoomPlan {
   id: RoomId;
   name: string;
-  colourUse: string;
+  colourUse: string[]; // one line per palette, in rank order
   look: string[]; // what your taste means here: the pieces to look for, then how it should feel
   materials: { name: string; why: string }[];
   buy: Record<Verdict, Item[]>;
@@ -89,7 +91,6 @@ export interface HomePlan {
   kitchen: { fridge: Chip; storage: Chip[] };
   rooms: RoomPlan[];
   otherPurchases: Record<Verdict, Item[]>;
-  constraints: string[];
   chores: { task: string; hours: number; hand: Hand; why: string; help: string; machine?: { name: string; cost: string } }[];
   hoursFreed: number;
   choreHeadline: string;
@@ -251,11 +252,20 @@ function rankPalettes(c: Ctx): RankedPalette[] {
 
     const why = reasons.sort((x, y) => y[0] - x[0]).slice(0, 2).map((r) => r[1]);
     const [base, second, depth, a1, a2] = colours.map((x) => x.hex);
+    const wall = c.paint ? base : c.fix.walls?.hex ?? base;
+    const floor = c.fix.floor?.hex ?? "";
+    const cab = c.fix.cabinets?.hex;
+    // Mirrors COLOUR_USE.kitchen: your cabinets stay, owners get palette shutters, renters without cabinets get steel racks.
+    const [uppers, lowers] = cab ? [cab, cab] : c.own ? [second, depth] : ["", "#C9CBCC"];
+    // shortcut: an unanswered counter is drawn as the default suggestion, ignoring excluded colours; fine for an illustration.
+    const counter = c.fix.counter?.hex ?? (c.cooking === "daily" ? "#1F1E1D" : "#E3DED5");
     return {
       ranked: {
         palette: p,
         colours: colours.map(({ name, hex }) => ({ name, hex })),
-        room: [c.paint ? base : c.fix.walls?.hex ?? base, depth, second, a1, a2, depth, c.fix.floor?.hex ?? "", c.fix.doors?.hex ?? ""],
+        room: [wall, depth, second, a1, a2, depth, floor, c.fix.doors?.hex ?? ""],
+        bedroom: [wall, second, depth, a1, a2, floor, c.fix.doors?.hex ?? "", second],
+        kitchen: [wall, uppers, lowers, c.own ? a1 : "#E9E5DE", counter, a2, floor],
         why: why.length ? why : ["An easy, balanced mix to live with"],
         avoided: [],
         wallsFixed: !c.paint,
@@ -407,8 +417,8 @@ export function buildHomePlan(input: Answers): HomePlan {
   const top = palettes[0];
   // An excluded colour named in advice becomes a colour from your own top palette.
   const swap = top.colours[1].name.toLowerCase();
-  const names = top.colours.map((x) => x.name);
-  const walls = c.paint ? `${names[0]} walls` : `Your walls stay as they are — ${names[0]} goes into rugs and throws`;
+  const names = palettes.map((p) => p.colours.map((x) => x.name));
+  const walls = names.map((n) => (c.paint ? `${n[0]} walls` : `Your walls stay as they are — ${n[0]} goes into rugs and throws`));
   const finishes = suggestFinishes(c, top);
 
   // Where advice lands in this home: a 1RK folds the living room into its one room; no balcony drops balcony-only advice.
@@ -449,7 +459,7 @@ export function buildHomePlan(input: Answers): HomePlan {
     const tips = TIPS.filter((t) => at(t.room) === r.id && (!t.when || t.when(c)));
     return {
       ...r,
-      colourUse: COLOUR_USE[r.id](names, c, walls),
+      colourUse: names.map((n, i) => COLOUR_USE[r.id](n, c, walls[i])),
       look: look(r.id),
       materials,
       buy,
@@ -527,24 +537,6 @@ export function buildHomePlan(input: Answers): HomePlan {
   const amounts = shares.map((share) => Math.floor((total * share) / 100 / 1000) * 1000);
   if (amounts.length) amounts[amounts.length - 1] += total - sum(amounts);
 
-  const bedroomCapacity = c.home === "1rk" || c.home === "1bhk" ? 1 : Number(c.home?.[0] ?? 2);
-  const unassignedBedrooms = Math.max(0, bedroomCapacity - 1 - (c.has("flatmates") ? 1 : 0) - rooms.filter((room) => ["parents", "kids", "study", "guest"].includes(room.id)).length);
-  const undescribedPeople = Math.max(0, c.people - minPeople(c.household));
-  const constraints = [
-    c.schemaVersion === 1 && "This plan came from the earlier questionnaire. Edit it once to confirm the new safety, inventory and budget fields.",
-    c.people > bedroomCapacity * 2 && `${c.people} people in ${label(HOMES, c.home)} needs an explicit sleeping and privacy plan; the quiz cannot prove that this occupancy is workable.`,
-    c.counted && undescribedPeople > 0 && `The headcount includes ${undescribedPeople} ${undescribedPeople === 1 ? "person" : "people"} beyond the household roles selected. Confirm their sleeping, storage and accessibility needs separately.`,
-    c.has("flatmates") && "The quiz does not know how many bedrooms the flatmates occupy; confirm every person's room before ordering furniture.",
-    c.home === "6bhk-plus" && "For 6BHK and larger homes, the report models the main bedroom plus four role-based rooms; map every additional bedroom separately before buying.",
-    unassignedBedrooms > 0 && `${unassignedBedrooms} ${unassignedBedrooms === 1 ? "bedroom is" : "bedrooms are"} not assigned a role by your answers, so the report intentionally leaves them unfurnished rather than inventing a use.`,
-    (c.bathrooms ?? 1) > 1 && `The bathroom section is one shared template for ${c.bathrooms} bathrooms. Measure and safety-check each wet area separately before repeating any purchase.`,
-    !c.balcony && "No balcony does not make the bathroom a safe laundry zone. Confirm a manufacturer-approved water, drain, ventilation and protected-power point.",
-    (c.needs("mobility") || c.needs("wheelchair")) && "Accessibility dimensions and support locations need an in-person occupational-therapy or accessibility assessment.",
-    c.needs("low-vision") && "Lighting and contrast need to be tested in the actual rooms with the person who will use them; this palette is not a low-vision assessment.",
-    c.needs("respiratory") && "Asthma and allergy triggers are individual. Verify textiles, plants, cleaning products and finish emissions against the person's clinician-led plan before buying.",
-    fit === "over" && `Even the remaining buy-now essentials exceed the ₹${Math.round(total).toLocaleString("en-IN")} ceiling. Do not order from this plan until the scope or budget changes.`,
-  ].filter(Boolean) as string[];
-
   return {
     primaryStyle: primaryStyle(c),
     summary: [label(TENURES, c.tenure), label(HOMES, c.home), c.people === 1 ? "Just you" : c.counted || c.people === estimateExact(c) ? `${c.people} people` : `About ${c.people} people`, label(CLIMATES, c.climate), label(WORKS, c.work), label(COOKING, c.cooking)].filter((x) => x !== undefined),
@@ -554,7 +546,6 @@ export function buildHomePlan(input: Answers): HomePlan {
     kitchen: kitchenColours(c, top, finishes),
     rooms,
     otherPurchases,
-    constraints,
     chores,
     hoursFreed,
     choreHeadline,

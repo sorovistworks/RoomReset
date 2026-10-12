@@ -9,7 +9,7 @@ import { buildHomePlan, type HomePlan, type Item, type RankedPalette } from "@/l
 import { decodeAnswers, encodeAnswers } from "@/lib/taste-engine";
 import { isComplete, type Answers } from "@/lib/taste-data";
 import type { Hand } from "@/lib/home-data";
-import { buttonClass, ButtonLink, Eyebrow, MiniRoom, Photo } from "./ui";
+import { buttonClass, ButtonLink, Eyebrow, MiniBedroom, MiniKitchen, MiniRoom, Photo } from "./ui";
 import { WaitlistForm } from "./waitlist-form";
 
 type View = { kind: "loading" } | { kind: "empty" } | { kind: "partial"; step: number } | { kind: "invalid-share" } | { kind: "ready"; answers: Answers; shared: boolean };
@@ -128,20 +128,6 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
         </figure>
       </header>
 
-      {p.constraints.length > 0 && (
-        <section className="wrap pb-16" aria-labelledby="constraints">
-          <div className="rounded-3xl border border-clay/35 bg-[#f7e8df] p-6 sm:p-8">
-            <Eyebrow>Confirm before you buy</Eyebrow>
-            <h2 id="constraints" className="mt-3 font-serif text-3xl">The quiz cannot safely infer these details.</h2>
-            <ul className="mt-5 space-y-3 text-sm leading-relaxed text-ink-soft">
-              {p.constraints.map((constraint) => (
-                <li key={constraint} className="flex gap-3"><span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-clay" />{constraint}</li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
-
       {/* 1. Palettes */}
       <section id="your-plan" className="scroll-mt-16 bg-paper py-20 sm:py-28" aria-labelledby="palettes">
         <div className="wrap">
@@ -157,16 +143,20 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
               <li key={r.palette.id} className="overflow-hidden rounded-2xl border border-line bg-ivory">
                 <MiniRoom colours={r.room} className="aspect-16/10" />
                 <div className="p-5">
-                  <div className="flex h-3 overflow-hidden rounded-full" aria-hidden>
-                    {r.colours.map((c) => (
-                      <span key={c.hex} className="flex-1" style={{ background: c.hex }} />
-                    ))}
-                  </div>
-                  <p className="mt-4 flex items-baseline gap-2 font-serif text-2xl leading-tight">
+                  <p className="flex items-baseline gap-2 font-serif text-2xl leading-tight">
                     <span className="text-base text-clay/80">0{i + 2}</span> {r.palette.name}
                   </p>
                   <p className="mt-1 text-xs text-ink-soft">Inspired by {r.palette.inspiredBy}</p>
                   <p className="mt-3 text-sm leading-snug text-ink-soft">{r.why.join(" · ")}</p>
+                  <ul className="mt-4 space-y-1.5 border-t border-line pt-4">
+                    {r.colours.map((c) => (
+                      <li key={c.hex} className="flex items-center gap-2.5">
+                        <span aria-hidden className="size-5 shrink-0 rounded-md border border-black/10" style={{ background: c.hex }} />
+                        <span className="min-w-0 flex-1 truncate text-sm">{c.name}</span>
+                        <CopyHex hex={c.hex} />
+                      </li>
+                    ))}
+                  </ul>
                   <Avoided r={r} />
                 </div>
               </li>
@@ -394,6 +384,17 @@ function Avoided({ r }: { r: RankedPalette }) {
 }
 
 function SwatchChip({ name, hex, role }: { name: string; hex: string; role: string }) {
+  return (
+    <li>
+      <div className="aspect-3/4 rounded-xl border border-black/5" style={{ background: hex }} />
+      <p className="mt-2 text-[0.62rem] uppercase leading-tight tracking-[0.12em] text-ink-soft">{role}</p>
+      <p className="mt-1 text-sm leading-tight">{name}</p>
+      <CopyHex hex={hex} className="mt-0.5" />
+    </li>
+  );
+}
+
+function CopyHex({ hex, className = "" }: { hex: string; className?: string }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -403,21 +404,24 @@ function SwatchChip({ name, hex, role }: { name: string; hex: string; role: stri
     } catch {}
   }
   return (
-    <li>
-      <div className="aspect-3/4 rounded-xl border border-black/5" style={{ background: hex }} />
-      <p className="mt-2 text-[0.62rem] uppercase leading-tight tracking-[0.12em] text-ink-soft">{role}</p>
-      <p className="mt-1 text-sm leading-tight">{name}</p>
-      <button type="button" onClick={copy} className="mt-0.5 inline-flex items-center gap-1 font-mono text-[0.68rem] text-ink-soft hover:text-ink" aria-label={`Copy ${hex}`}>
-        {hex} {copied ? <Check className="size-3" aria-hidden /> : <Copy className="size-3" aria-hidden />}
-      </button>
-    </li>
+    <button type="button" onClick={copy} className={`inline-flex items-center gap-1 font-mono text-[0.68rem] text-ink-soft hover:text-ink ${className}`} aria-label={`Copy ${hex}`}>
+      {hex} {copied ? <Check className="size-3" aria-hidden /> : <Copy className="size-3" aria-hidden />}
+    </button>
   );
 }
 
 function Rooms({ plan }: { plan: HomePlan }) {
   const [tab, setTab] = useState(0);
+  const [pal, setPal] = useState(0); // shared across room tabs, so a palette you're trying stays picked
   const room = plan.rooms[tab];
   const top = plan.palettes[0];
+  const shown = plan.palettes[pal];
+  const art = "aspect-4/3 lg:aspect-auto lg:min-h-80";
+  const scene =
+    room.id === "living" ? <MiniRoom colours={shown.room} className={art} />
+    : room.id === "bedroom" ? <MiniBedroom colours={shown.bedroom} className={art} />
+    : room.id === "kitchen" ? <MiniKitchen colours={shown.kitchen} fridge={plan.kitchen.fridge.hex} containers={plan.kitchen.storage.map((s) => s.hex)} className={art} />
+    : null;
 
   function onKey(e: KeyboardEvent) {
     const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
@@ -436,7 +440,7 @@ function Rooms({ plan }: { plan: HomePlan }) {
         </h2>
       </div>
 
-      <div role="tablist" aria-label="Rooms" onKeyDown={onKey} className="-mx-4 mt-10 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+      <div role="tablist" aria-label="Rooms" onKeyDown={onKey} className="mt-10 flex flex-wrap gap-2">
         {plan.rooms.map((r, i) => (
           <button
             key={r.id}
@@ -447,7 +451,7 @@ function Rooms({ plan }: { plan: HomePlan }) {
             aria-controls="room-panel"
             tabIndex={i === tab ? 0 : -1}
             onClick={() => setTab(i)}
-            className={`min-h-11 shrink-0 rounded-full border px-5 text-sm transition ${i === tab ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
+            className={`min-h-11 rounded-full border px-4 text-sm transition sm:px-5 ${i === tab ? "border-ink bg-ink text-ivory" : "border-line bg-paper hover:border-ink/40"}`}
           >
             {r.name}
           </button>
@@ -455,17 +459,54 @@ function Rooms({ plan }: { plan: HomePlan }) {
       </div>
 
       <div id="room-panel" role="tabpanel" aria-labelledby={`tab-${room.id}`} key={room.id} className="fade mt-8">
-        <div className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-5 sm:flex-row sm:items-center sm:p-6">
-          <span className="flex shrink-0 gap-1" aria-hidden>
-            {top.colours.map((c) => (
-              <span key={c.hex} className="size-6 rounded-full border border-black/10" style={{ background: c.hex }} />
-            ))}
-          </span>
-          <p className="text-[0.95rem] leading-relaxed">
-            <span className="text-ink-soft">Colour, in {top.palette.name}: </span>
-            {room.colourUse}
-          </p>
-        </div>
+        {/* Rooms with a picture let you try every palette; the rest show the top one. */}
+        {scene ? (
+          <div className="grid overflow-hidden rounded-3xl border border-line bg-paper lg:grid-cols-[1.1fr_1fr]">
+            {scene}
+            <div className="p-5 sm:p-7">
+              <h3 className="eyebrow">See it in each of your palettes</h3>
+              <div role="radiogroup" aria-label="Palette" className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {plan.palettes.map((p, i) => (
+                  <button
+                    key={p.palette.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={i === pal}
+                    onClick={() => setPal(i)}
+                    className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition ${i === pal ? "border-ink bg-ivory" : "border-line hover:border-ink/40"}`}
+                  >
+                    <span className="flex h-5 w-14 shrink-0 overflow-hidden rounded-full border border-black/10" aria-hidden>
+                      {p.colours.map((c) => (
+                        <span key={c.hex} className="flex-1" style={{ background: c.hex }} />
+                      ))}
+                    </span>
+                    <span className="min-w-0 truncate">
+                      <span className="text-ink-soft">0{i + 1} </span>
+                      {p.palette.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-5 text-[0.95rem] leading-relaxed">
+                <span className="text-ink-soft">Colour, in {shown.palette.name}: </span>
+                {room.colourUse[pal]}
+              </p>
+              {room.id === "kitchen" && <p className="mt-3 text-sm text-ink-soft">The fridge and containers stay in the colours recommended below.</p>}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-5 sm:flex-row sm:items-center sm:p-6">
+            <span className="flex shrink-0 gap-1" aria-hidden>
+              {top.colours.map((c) => (
+                <span key={c.hex} className="size-6 rounded-full border border-black/10" style={{ background: c.hex }} />
+              ))}
+            </span>
+            <p className="text-[0.95rem] leading-relaxed">
+              <span className="text-ink-soft">Colour, in {top.palette.name}: </span>
+              {room.colourUse[0]}
+            </p>
+          </div>
+        )}
 
         {room.look.length > 0 && (
           <div className="mt-4 rounded-2xl border border-line p-5 sm:p-6">

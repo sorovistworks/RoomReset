@@ -130,7 +130,7 @@ export const COLOUR_USE: Record<RoomId, (n: string[], c: Ctx, w: string) => stri
     return `Your ${name} cabinets stay — bring in ${n[3]} and ${n[4]} through jars, tea towels and a runner${c.own ? `, with ${n[3]} in the backsplash` : ""}.`;
   },
   bathroom: (n, c) => (c.own ? `${n[0]} or ${n[1]} wall tiles, ${n[1]} towels, and ${n[3]} in the mat and accessories.` : `Your tiles stay — ${n[1]} towels and shower curtain, with ${n[3]} in the mat and accessories.`),
-  living: (n, _c, w) => `${w}, a ${n[1]} sofa, ${n[2]} wood tones, with ${n[3]} and ${n[4]} in cushions, rug and art.`,
+  living: (n, _c, w) => `${w}, ${/^[aeiou]/i.test(n[1]) ? "an" : "a"} ${n[1]} sofa, ${n[2]} wood tones, with ${n[3]} and ${n[4]} in cushions, rug and art.`,
   balcony: (n, c) => (hot(c) ? `${n[2]} furniture under ${n[1]} shade cloth or chik blinds, with ${n[3]} planters.` : `${n[2]} furniture with ${n[3]} planters.`),
   parents: (n, _c, w) => `${w}, ${n[1]} bedding and ${n[2]} furniture, with a throw in ${n[3]} — warm, simple and easy to see in.`,
   kids: (n, _c, w) => `${w}, ${n[1]} bedding, with ${n[3]} and ${n[4]} in a rug, bins and art they choose.`,
@@ -548,7 +548,11 @@ export const CHECKS: { text: string; when?: (c: Ctx) => boolean }[] = [
   { text: "Get your help police-verified through your state police's citizen portal, and keep copies of their ID safe.", when: (c) => c.hasHelp },
   { text: "Decide where live-in help will sleep and bathe before you sign, and agree privacy, hours and a weekly day off.", when: (c) => c.helpLivesIn === true },
   { text: "Check the lift works, or that your parents' room is on the entry floor — stairs decide how comfortably they can stay.", when: (c) => c.has("elders") },
-  { text: "Agree in writing who owns the shared fridge, washer and purifier, and how they're split when someone moves out.", when: (c) => c.has("flatmates") },
+  { text: "Agree which room is whose before ordering furniture, and put in writing who owns the shared fridge, washer and purifier, and how they're split when someone moves out.", when: (c) => c.has("flatmates") },
+  { text: "No balcony, so pick the washing machine spot now: it needs a water tap, a drain and an earthed socket away from splashes.", when: (c) => !c.balcony },
+  { text: "Before fitting grab bars or ramps, have an occupational therapist visit and mark exactly where support is needed.", when: (c) => c.needs("mobility") || c.needs("wheelchair") },
+  { text: "Try lights and contrast in the actual rooms with whoever has low vision before buying fittings.", when: (c) => c.needs("low-vision") },
+  { text: "Run fabrics, plants, paints and cleaning products past the asthma or allergy doctor before you buy.", when: (c) => c.needs("respiratory") },
 ];
 
 // ---------- Where to spend and where to save, by budget band ----------

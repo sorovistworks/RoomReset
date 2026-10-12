@@ -155,7 +155,7 @@ test("a dark floor never gets a dark-walled palette, and dark doors get echoed",
 test("renters' fixed walls show in the preview unless they can repaint", () => {
   const exact = fx({ walls: { id: "coloured", hex: "#C9D8C5" } });
   assert.equal(buildHomePlan(exact).palettes[0].room[0], "#C9D8C5");
-  assert.ok(buildHomePlan(exact).rooms[0].colourUse.includes("walls stay as they are"));
+  assert.ok(buildHomePlan(exact).rooms[0].colourUse[0].includes("walls stay as they are"));
   const p = buildHomePlan({ ...exact, repaint: true, rentalPermissions: ["paint"] });
   assert.equal(p.palettes[0].room[0], p.palettes[0].colours[0].hex);
 });
@@ -174,8 +174,18 @@ test("the modular kitchen colour steers the fridge and the kitchen advice", () =
   assert.ok(dark.fixtureNotes.some((n) => n.includes("under-cabinet LED")));
   const white = buildHomePlan(fx({ cabinets: { id: "white" } }));
   assert.equal(white.kitchen.fridge.name, "White or silver");
-  assert.match(white.rooms[1].colourUse, /Your white cabinets stay/);
-  assert.match(buildHomePlan(fx({ cabinets: { id: "none" } })).rooms[1].colourUse, /No cabinets/);
+  assert.match(white.rooms[1].colourUse[0], /Your white cabinets stay/);
+  assert.match(buildHomePlan(fx({ cabinets: { id: "none" } })).rooms[1].colourUse[0], /No cabinets/);
+});
+
+test("every palette gets its own colour line and room scenes, with the person's fixtures kept", () => {
+  const p = buildHomePlan(fx({ cabinets: { id: "white" } }));
+  for (const room of p.rooms) assert.equal(new Set(room.colourUse).size, p.palettes.length);
+  for (const x of p.palettes) {
+    assert.equal(x.kitchen[1], buildHomePlan(fx({ cabinets: { id: "white" } })).palettes[0].kitchen[1]); // your cabinets in every palette
+    assert.equal(x.bedroom[1], x.colours[1].hex);
+  }
+  assert.equal(buildHomePlan(fx({ cabinets: { id: "none" } })).palettes[0].kitchen[1], ""); // renters without cabinets: open racks
 });
 
 test("empty answers never throw", () => {
@@ -427,13 +437,13 @@ test("child, pet, respiratory and access advice is gated by the details supplied
   const access = buildHomePlan({ ...base, householdNeeds: ["mobility", "low-vision"] });
   const support = access.rooms.flatMap((room) => room.buy.now).find((item) => item.name === "Grab bars and anti-skid mats")!;
   assert.match(support.why, /suction rails can't take body weight/i);
-  assert.ok(access.constraints.some((text) => text.includes("occupational-therapy")));
-  assert.ok(access.constraints.some((text) => text.includes("low-vision assessment")));
+  assert.ok(access.checks.some((text) => text.includes("occupational therapist")));
+  assert.ok(access.checks.some((text) => text.includes("low vision")));
 
   const respiratory = buildHomePlan({ ...base, householdNeeds: ["respiratory"], styles: ["organic-modern"], materials: ["velvet", "woven"] });
   const respiratoryText = respiratory.rooms.flatMap((room) => [...room.look, ...room.materials.flatMap((material) => [material.name, material.why])]).join(" ");
   assert.doesNotMatch(respiratoryText, /wool|velvet|dried grass|upholstered headboard/i);
-  assert.ok(respiratory.constraints.some((text) => text.includes("triggers are individual")));
+  assert.ok(respiratory.checks.some((text) => text.includes("allergy doctor")));
 });
 
 test("generated colours and finishes obey hard colour exclusions", () => {
@@ -462,10 +472,8 @@ test("large homes and exact ceilings do not collapse into generic family advice"
   const large = buildHomePlan({ ...base, home: "6bhk-plus", household: ["partner", "kids", "elders"], childAges: ["teen"], people: 12, guests: "often", work: "wfh", budgetAmount: 2_000_000 });
   assert.deepEqual(large.rooms.slice(5).map((room) => room.id), ["parents", "kids", "study", "guest"]);
   assert.match(large.rooms.flatMap((room) => [...room.buy.now, ...room.buy.later]).find((item) => item.name === "Dining table")!.why, /Seating for 14/);
-  assert.ok(large.constraints.some((text) => text.includes("6BHK and larger")));
 
   const impossible = buildHomePlan({ ...base, budget: "tight", budgetAmount: 10000 });
   assert.notEqual(impossible.budget.fit, "fits");
   assert.ok(impossible.budget.postpone.every((item) => !item.core));
-  assert.ok(impossible.constraints.some((text) => text.includes("No feasible") || text.includes("exceed")));
 });
