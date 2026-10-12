@@ -8,7 +8,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage eyebrow="Privacy" title="Your privacy, in plain language." updated="12 October 2026">
       <p>
-        RoomReset is a pre-launch product. We collect as little as possible, and we never sell your data. This policy explains what we collect, why, and the
+        Habitaste is a pre-launch product. We collect as little as possible, and we never sell your data. This policy explains what we collect, why, and the
         choices you have.
       </p>
 
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         If you use &ldquo;Share my plan&rdquo;, your quiz answers are encoded into the part of the link after <code>#</code>. This includes tastes, home and fixture details,
         household composition, child age groups, pet types, accessibility or respiratory needs, domestic-help arrangements, routine, possessions and exact budget.
         Encoding is not encryption: anyone who receives the link can open and read the plan and recover those answers. The link contains no name, email or contact details,
-        and RoomReset does not upload the answer payload when it creates the link.
+        and Habitaste does not upload the answer payload when it creates the link.
       </p>
 
       <h2>Early-access list</h2>
@@ -34,19 +34,19 @@ export default function PrivacyPage() {
         <li>when you gave consent and which version of this policy applied.</li>
       </ul>
       <p>
-        We use this only to email you about RoomReset early access and launch. The list is stored with our database provider, Supabase, and is never
+        We use this only to email you about Habitaste early access and launch. The list is stored with our database provider, Supabase, and is never
         publicly accessible. Every email will include a way to unsubscribe, and you can ask us to delete your details at any time.
       </p>
 
       <h2>Country votes</h2>
       <p>
-        If you vote to bring RoomReset to your country, we store the country you chose and a one-way code made from your internet connection (a salted
+        If you vote to bring Habitaste to your country, we store the country you chose and a one-way code made from your internet connection (a salted
         hash of your IP address), so each connection counts once. We never store your IP address itself, and the code can&apos;t be turned back into it.
         Only the total votes per country are shown publicly. Your browser also remembers which country you picked, so it can highlight it.
       </p>
 
       <h2>Room photos</h2>
-      <p>RoomReset does not currently accept or store room photographs. When that feature launches, we will update this policy before collecting any.</p>
+      <p>Habitaste does not currently accept or store room photographs. When that feature launches, we will update this policy before collecting any.</p>
 
       <h2>Cookies and analytics</h2>
       <p>We do not use advertising cookies or third-party tracking. Session storage is used only to remember which campaign link you arrived from.</p>

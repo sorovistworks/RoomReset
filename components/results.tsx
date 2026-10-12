@@ -333,11 +333,11 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
             </div>
           </div>
           <div>
-            <Eyebrow>Your future RoomReset</Eyebrow>
+            <Eyebrow>Coming soon to Habitaste</Eyebrow>
             <h2 id="future" className="display mt-4 text-4xl sm:text-5xl">
               Imagine this plan in your actual rooms.
             </h2>
-            <p className="mt-5 text-lg leading-relaxed text-ink-soft">RoomReset AI Makeovers are coming soon. Be among the first to see your space transformed.</p>
+            <p className="mt-5 text-lg leading-relaxed text-ink-soft">Habitaste AI Makeovers are coming soon. Be among the first to see your space transformed.</p>
             <div className="mt-8">
               <WaitlistForm styleId={shared ? undefined : p.primaryStyle} />
             </div>
@@ -695,7 +695,7 @@ function StageItems({ plan, verdict }: { plan: HomePlan; verdict: "now" | "later
 }
 
 function checklistText(plan: HomePlan) {
-  const lines = ["My RoomReset home plan", "", "Before moving in:", ...plan.checks.map((c) => `☐ ${c}`), "", "Buy first:"];
+  const lines = ["My Habitaste home plan", "", "Before moving in:", ...plan.checks.map((c) => `☐ ${c}`), "", "Buy first:"];
   for (const r of plan.rooms) if (r.buy.now.length) lines.push(`${r.name}: ${r.buy.now.map(itemLabel).join(", ")}`);
   if (plan.otherPurchases.now.length) lines.push(`Household tools: ${plan.otherPurchases.now.map(itemLabel).join(", ")}`);
   lines.push("", "Later:");
@@ -726,7 +726,7 @@ function Actions({ answers, plan }: { answers: Answers; plan: HomePlan }) {
       return;
     }
     const url = `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH}/results#d=${encodeAnswers(answers)}`;
-    const text = `My RoomReset home plan — top palette: ${plan.palettes[0].palette.name}. Plan yours:`;
+    const text = `My Habitaste home plan — top palette: ${plan.palettes[0].palette.name}. Plan yours:`;
     setConfirmShare(false);
     try {
       if (navigator.share) return await navigator.share({ title: "My home plan", text, url });

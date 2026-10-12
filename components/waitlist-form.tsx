@@ -76,7 +76,7 @@ export function WaitlistForm({ tone = "light", styleId }: { tone?: "light" | "da
         <p className={`mt-3 text-[0.95rem] leading-relaxed ${dark ? "text-ivory/75" : "text-ink-soft"}`}>
           {state.duplicate
             ? "Good news — this email is already registered for early access. There's nothing more you need to do."
-            : "We'll email you when RoomReset AI Makeovers are ready to try. Your Taste DNA stays saved in this browser in the meantime."}
+            : "We'll email you when Habitaste AI Makeovers are ready to try. Your Taste DNA stays saved in this browser in the meantime."}
         </p>
       </div>
     );

@@ -9,7 +9,7 @@ export default function ContactPage() {
   return (
     <LegalPage eyebrow="Contact & support" title="We'd love to hear from you.">
       <p>
-        Questions about your Taste DNA, feedback on what you&apos;d like RoomReset to do for your room, or a privacy request — email us and a real person will
+        Questions about your Taste DNA, feedback on what you&apos;d like Habitaste to do for your room, or a privacy request — email us and a real person will
         reply.
       </p>
       <p className="not-prose mt-8">

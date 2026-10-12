@@ -9,11 +9,11 @@ export default function TermsPage() {
   const credits = [...new Map(Object.values(PHOTOS).map((p) => [p.credit, p])).keys()].sort();
   return (
     <LegalPage eyebrow="Terms" title="Terms of use." updated="12 October 2026">
-      <p>By using RoomReset you agree to these terms. They&apos;re short, because the product is simple today.</p>
+      <p>By using Habitaste you agree to these terms. They&apos;re short, because the product is simple today.</p>
 
-      <h2>What RoomReset offers today</h2>
+      <h2>What Habitaste offers today</h2>
       <p>
-        RoomReset currently offers a free Taste DNA questionnaire and personalised home plan, including an illustrative budget section, plus an early-access list. AI room makeovers, catalogue shopping
+        Habitaste currently offers a free Taste DNA questionnaire and personalised home plan, including an illustrative budget section, plus an early-access list. AI room makeovers, catalogue shopping
         and interactive design refinements are in development and clearly marked &ldquo;Coming soon&rdquo;. Nothing on the site can be purchased, and no
         payment is ever requested.
       </p>
@@ -27,7 +27,7 @@ export default function TermsPage() {
 
       <h2>Imagery</h2>
       <p>
-        Photographs are inspiration and illustrative examples only. They are not transformations created by RoomReset. Prices shown in previews are
+        Photographs are inspiration and illustrative examples only. They are not transformations created by Habitaste. Prices shown in previews are
         illustrative, not offers.
       </p>
 
@@ -36,7 +36,7 @@ export default function TermsPage() {
 
       <h2>Changes and contact</h2>
       <p>
-        We may update these terms as RoomReset grows, and will change the date above when we do. Questions? Email{" "}
+        We may update these terms as Habitaste grows, and will change the date above when we do. Questions? Email{" "}
         <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.
       </p>
 
@@ -46,7 +46,7 @@ export default function TermsPage() {
       </p>
       <p>
         The furnished room on the coming-soon page is an AI visualisation, made with Higgsfield from Salvo Media LLC&apos;s Unsplash photo of the same empty
-        room. It illustrates a future feature and is not a RoomReset result.
+        room. It illustrates a future feature and is not a Habitaste result.
       </p>
     </LegalPage>
   );

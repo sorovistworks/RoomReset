@@ -101,7 +101,7 @@ export default function Home() {
 
       {/* How it works */}
       <section className="wrap py-24 sm:py-32" aria-labelledby="how">
-        <SectionHeading eyebrow="How RoomReset works" title={<span id="how"><SplitWords text="From instinct to a room that feels like you." /></span>} />
+        <SectionHeading eyebrow="How Habitaste works" title={<span id="how"><SplitWords text="From instinct to a room that feels like you." /></span>} />
         <ol className="mt-16 grid gap-px overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-3">
           {[
             { n: "01", t: "Share Your Taste & Routine", b: "Pick rooms, feelings and textures you love, then tell us about your home, weather and week.", cta: ["/discover", "Start the quiz"] },
@@ -136,7 +136,7 @@ export default function Home() {
           <div className="lg:col-span-5 lg:sticky lg:top-28 lg:self-start">
             <SectionHeading eyebrow="Your home plan" title={<span id="dna"><SplitWords text="Not a style label — a plan for how you live." /></span>}>
               <p>
-                Most quizzes put you in a box. RoomReset reads what you respond to — the rooms you linger on, how you want to feel, the textures you reach
+                Most quizzes put you in a box. Habitaste reads what you respond to — the rooms you linger on, how you want to feel, the textures you reach
                 for — and pairs it with how you actually live: your home, your weather, your work hours and your kitchen.
               </p>
               <p className="mt-4">So a renter in humid Mumbai and an owner facing Delhi winters get very different advice.</p>
@@ -159,7 +159,7 @@ export default function Home() {
             </ButtonLink>
           </div>
           <div className="space-y-6 lg:col-span-7">
-            <p data-reveal className="eyebrow">Three example households, planned by the RoomReset engine</p>
+            <p data-reveal className="eyebrow">Three example households, planned by the Habitaste engine</p>
             {examples.map((p, i) => {
               const top = p.palettes[0];
               return (
@@ -195,11 +195,11 @@ export default function Home() {
       {/* Inspiration showcase */}
       <section className="wrap py-24 sm:py-32" aria-labelledby="future">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <SectionHeading eyebrow="The future of RoomReset" title={<span id="future"><SplitWords text="Imagine your room, reset." /></span>}>
+          <SectionHeading eyebrow="The future of Habitaste" title={<span id="future"><SplitWords text="Imagine your room, made yours." /></span>}>
             <p>Soon you&apos;ll see your own space reimagined in your Taste DNA — layered, warm and planned around the permissions you actually have.</p>
           </SectionHeading>
           <p data-reveal className="max-w-xs text-xs leading-relaxed text-ink-soft md:text-right">
-            Inspiration imagery for illustration only. These are not transformations created by RoomReset.
+            Inspiration imagery for illustration only. These are not transformations created by Habitaste.
           </p>
         </div>
         <div className="mt-14 grid grid-cols-2 gap-4 md:grid-cols-12 md:gap-5">
@@ -251,7 +251,7 @@ export default function Home() {
       {/* Country votes */}
       <section className="bg-paper py-24 sm:py-32" aria-labelledby="beyond">
         <div className="wrap">
-          <SectionHeading eyebrow="Beyond India" title={<span id="beyond" className="scroll-mt-28"><SplitWords text="Not in India? Vote to bring RoomReset to you." /></span>}>
+          <SectionHeading eyebrow="Beyond India" title={<span id="beyond" className="scroll-mt-28"><SplitWords text="Not in India? Vote to bring Habitaste to you." /></span>}>
             <p>
               Today every plan is tuned for Indian homes: the weather, renting rules, Vastu, local materials and prices. Tell us where you live, and the
               votes will decide where we go next.

@@ -1,4 +1,4 @@
--- RoomReset "bring it to my country" votes.
+-- Habitaste "bring it to my country" votes.
 -- The site is static, so the browser calls these functions directly with the public (publishable/anon) key.
 -- Anon can execute the two functions below and nothing else: it can't read or write the table directly.
 

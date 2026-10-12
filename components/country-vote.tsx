@@ -64,9 +64,9 @@ export function CountryVote() {
   const shareUrl = () => `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH}/#beyond`;
 
   async function share() {
-    const text = `I voted to bring RoomReset to ${name(voted!)}. Add your vote so it gets here sooner:`;
+    const text = `I voted to bring Habitaste to ${name(voted!)}. Add your vote so it gets here sooner:`;
     try {
-      if (navigator.share) return await navigator.share({ title: "Bring RoomReset to my country", text, url: shareUrl() });
+      if (navigator.share) return await navigator.share({ title: "Bring Habitaste to my country", text, url: shareUrl() });
       await navigator.clipboard.writeText(`${text} ${shareUrl()}`);
       setShareMsg("Link copied. Paste it into WhatsApp, Instagram or an email.");
     } catch (e) {

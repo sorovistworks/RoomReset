@@ -8,7 +8,7 @@ import { ROOM_INPUTS } from "@/lib/room-inputs";
 
 export const metadata: Metadata = {
   title: "Coming soon",
-  description: "A preview of RoomReset AI makeovers, shop-the-look and design refinements, plus a working category budget calculator.",
+  description: "A preview of Habitaste AI makeovers, shop-the-look and design refinements, plus a working category budget calculator.",
 };
 
 const PRODUCTS = [
@@ -32,7 +32,7 @@ export default function ComingSoonPage() {
   return (
     <>
       <section className="wrap pb-16 pt-14 sm:pt-20">
-        <Eyebrow className="rise">Coming soon to RoomReset</Eyebrow>
+        <Eyebrow className="rise">Coming soon to Habitaste</Eyebrow>
         <h1 className="display rise mt-6 max-w-4xl text-[clamp(2.8rem,7vw,5.6rem)]" style={{ animationDelay: "80ms" }}>
           The future of your room, <em className="text-clay">previewed honestly.</em>
         </h1>
@@ -61,7 +61,7 @@ export default function ComingSoonPage() {
         <div className="wrap">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <SectionHeading eyebrow="AI Makeovers — Coming soon" title="Your own room, reimagined in your style.">
-              <p>Upload a photo and RoomReset will show your space restyled around your Taste DNA, your budget and your landlord&apos;s rules.</p>
+              <p>Upload a photo and Habitaste will show your space restyled around your Taste DNA, your budget and your landlord&apos;s rules.</p>
             </SectionHeading>
             <ComingSoon />
           </div>
@@ -73,11 +73,11 @@ export default function ComingSoonPage() {
             <ArrowRight className="mx-auto size-6 rotate-90 text-clay md:rotate-0" aria-hidden />
             <figure>
               <Photo photo={RESET_VISUAL} sizes="(min-width: 768px) 45vw, 100vw" className="aspect-4/3 rounded-[1.75rem]" />
-              <figcaption className="mt-3 text-sm text-ink-soft">Your RoomReset</figcaption>
+              <figcaption className="mt-3 text-sm text-ink-soft">Your room, by Habitaste</figcaption>
             </figure>
           </div>
           <p className="mt-6 rounded-2xl border border-line bg-paper px-5 py-3 text-xs leading-relaxed text-ink-soft">
-            Illustrative concept only: the second image is an AI visualisation of the same room, made with a general image model for this preview. It is not a RoomReset makeover, and AI makeovers are not available yet.
+            Illustrative concept only: the second image is an AI visualisation of the same room, made with a general image model for this preview. It is not a Habitaste makeover, and AI makeovers are not available yet.
           </p>
         </div>
       </section>

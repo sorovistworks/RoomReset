@@ -1,4 +1,4 @@
--- RoomReset early-access waitlist.
+-- Habitaste early-access waitlist.
 -- The site inserts with the anon/publishable key from the server. RLS allows INSERT only:
 -- nobody using that key can read, update or delete rows. Review sign-ups in the Supabase dashboard.
 

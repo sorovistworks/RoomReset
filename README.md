@@ -1,8 +1,8 @@
-# RoomReset
+# Habitaste
 
 **Your room. Your taste. A whole new feeling.**
 
-This is the pre-launch site for RoomReset. Visitors get a free, working **Taste DNA** questionnaire and a personalised design report, plus an early-access waitlist. AI makeovers, shopping, refinements and personalised plans appear as clearly labelled *Coming soon* previews.
+This is the pre-launch site for Habitaste. Visitors get a free, working **Taste DNA** questionnaire and a personalised design report, plus an early-access waitlist. AI makeovers, shopping, refinements and personalised plans appear as clearly labelled *Coming soon* previews.
 
 ## Stack
 
@@ -41,7 +41,7 @@ npm run build && npm start
 | `SUPABASE_SECRET_KEY` | For the waitlist | Secret / service_role key. **Server-only — never add a `NEXT_PUBLIC_` prefix.** |
 | `NEXT_PUBLIC_SUPABASE_URL` | For country votes | Same project URL. Public by design. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | For country votes | Publishable / anon key. Public by design: it can only call the two vote functions. |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | Before launch | Shown on contact/privacy/terms. Falls back to the placeholder `hello@roomreset.example`. |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Before launch | Shown on contact/privacy/terms. Falls back to the placeholder `hello@habitaste.example`. |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical URL for metadata and OpenGraph |
 
 If the Supabase variables are missing, the form says so honestly and nothing is saved. The API returns `503 not_configured`.

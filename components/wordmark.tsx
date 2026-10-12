@@ -15,9 +15,9 @@ export function Wordmark({ className = "" }: { className?: string }) {
         window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       }}
       className={`font-serif text-[1.65rem] leading-none tracking-tight ${className}`}
-      aria-label="RoomReset home"
+      aria-label="Habitaste — home page"
     >
-      Room<span className="italic text-clay">Reset</span>
+      Habi<span className="italic text-clay">taste</span>
     </Link>
   );
 }

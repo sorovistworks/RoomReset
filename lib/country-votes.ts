@@ -1,4 +1,4 @@
-// "Bring RoomReset to my country" votes. The browser calls two Supabase functions with the public key
+// "Bring Habitaste to my country" votes. The browser calls two Supabase functions with the public key
 // (supabase/migrations/002_country_votes.sql); it can't read or write the votes table itself.
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

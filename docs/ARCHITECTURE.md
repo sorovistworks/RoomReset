@@ -1,4 +1,4 @@
-# RoomReset architecture
+# Habitaste architecture
 
 ## Today (pre-launch)
 
