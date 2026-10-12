@@ -41,6 +41,7 @@ import {
   type ColourFamily,
   type ColourId,
   type FixtureKey,
+  type HelpDuty,
   type StyleId,
 } from "./taste-data.ts";
 import { luminance, primaryStyle } from "./taste-engine.ts";
@@ -151,12 +152,14 @@ export function context(input: Answers): Ctx {
       return [f.key, { id: pick.id, hex: pick.hex ?? f.options.find((o) => o.id === pick.id)!.hex }];
     }),
   ) as Ctx["fix"];
+  // Unanswered help duties default to what that kind of help usually covers.
+  const duties: HelpDuty[] = a.helpDuties.length || a.help === null || a.help === "none" ? a.helpDuties : a.help === "maid" ? ["cleaning", "dishes"] : ["cleaning", "dishes", "cooking"];
   return {
     ...a,
     rent: a.tenure !== "own",
     own: a.tenure === "own",
     small: a.home === "1rk" || a.home === "1bhk",
-    busy: a.work !== null,
+    busy: a.work === "office" || a.work === "long",
     hasHelp: a.help !== null && a.help !== "none",
     has: (m) => a.household.includes(m),
     loves: (m) => a.materials.includes(m),
@@ -169,7 +172,13 @@ export function context(input: Answers): Ctx {
     allowExterior: a.tenure === "own" || a.rentalPermissions.includes("exterior"),
     owns: (item) => a.existingItems.includes(item),
     needs: (need) => a.householdNeeds.includes(need),
-    helpDoes: (duty) => a.helpDuties.includes(duty),
+    helpDoes: (duty) => duties.includes(duty),
+    bathrooms: a.bathrooms ?? (a.home === "1rk" || a.home === "1bhk" ? 1 : 2),
+    guests: a.guests ?? "sometimes",
+    childAges: a.household.includes("kids") && !a.childAges.length ? ["unknown"] : a.childAges,
+    petTypes: a.household.includes("pets") && !a.petTypes.length ? ["other"] : a.petTypes,
+    helpDuties: duties,
+    helpLivesIn: a.helpLivesIn ?? false,
   };
 }
 
@@ -274,7 +283,13 @@ function suggestFinishes(c: Ctx, top: RankedPalette): HomePlan["finishes"] {
   const [base, , depth] = top.colours;
   const out: HomePlan["finishes"] = [];
   if (!c.fix.floor) {
-    out.push({ label: "Floor", name: `${top.colours[1].name} matte vitrified tile`, hex: top.colours[1].hex, why: "A palette-matched, low-glare base; inspect the real tile for slip rating and undertone before ordering." });
+    const floors = [
+      { temp: "warm", name: "Wood-look or beige vitrified tiles", hex: "#B89272", why: "Warm underfoot and forgiving of dust." },
+      { temp: "cool", name: "White or light grey vitrified tiles", hex: "#D9DADA", why: "Keeps cool colours crisp and the room bright." },
+      { temp: "neutral", name: "Marble-look vitrified tiles", hex: "#E6E2DA", why: "A quiet, light base that suits a neutral palette." },
+    ];
+    const floor = [...floors].sort((x, y) => Number(y.temp === top.palette.temp) - Number(x.temp === top.palette.temp)).find((f) => allowedHex(c, f.hex)) ?? floors[2];
+    out.push({ label: "Floor", name: floor.name, hex: floor.hex, why: `${floor.why} Choose a matte, anti-skid finish.` });
   }
   if (!c.fix.doors) {
     const d = [...DOOR_FINISHES].filter((candidate) => allowedHex(c, candidate.hex)).sort((x, y) => distance(x.hex, depth.hex) - distance(y.hex, depth.hex))[0];
@@ -286,8 +301,11 @@ function suggestFinishes(c: Ctx, top: RankedPalette): HomePlan["finishes"] {
     out.push({ label: "Kitchen cabinets", name: `${second.name} uppers, ${wood.name} lowers`, hex: wood.hex, why: "Two-tone hides daily wear low down and keeps the top light." });
   }
   if (!c.fix.counter) {
-    const tone = c.cooking === "daily" ? top.colours[2] : top.colours[1];
-    out.push({ label: "Kitchen counter", name: `${tone.name} ${c.budget === "tight" ? "granite" : "low-porosity quartz"}`, hex: tone.hex, why: "Matches an allowed palette colour. Verify the exact slab's stain, heat, sealing and warranty requirements before purchase." });
+    const granite = { label: "Kitchen counter", name: "Black granite", hex: "#1F1E1D", why: "Heat-proof and hides haldi and oil stains." };
+    const quartz = { label: "Kitchen counter", name: "Light quartz", hex: "#E3DED5", why: "Brightens the kitchen and needs no sealing." };
+    const first = c.cooking === "daily" ? granite : quartz;
+    const second = first === granite ? quartz : granite;
+    out.push(allowedHex(c, first.hex) ? first : allowedHex(c, second.hex) ? second : { label: "Kitchen counter", name: `Granite or quartz in ${top.colours[2].name.toLowerCase()}`, hex: top.colours[2].hex, why: "A shade from your palette, outside the colours you excluded." });
   }
   return out;
 }
@@ -320,7 +338,7 @@ function kitchenColours(c: Ctx, top: RankedPalette, finishes: HomePlan["finishes
   return {
     fridge,
     storage: [
-      { name: `${top.colours[2].name} storage`, hex: top.colours[2].hex, why: "Uses an allowed depth tone from your palette." },
+      allowedHex(c, "#C9CBCC") ? { name: "Stainless steel", hex: "#C9CBCC", why: "Always works, and lasts." } : { name: `${top.colours[2].name} containers`, hex: top.colours[2].hex, why: "A depth tone from your palette, outside the colours you excluded." },
       { name: `Clear glass, ${a1.name} lids`, hex: a1.hex, why: "Your accent colour, in small doses." },
       dark
         ? { name: `${base.name} canisters`, hex: base.hex, why: "Light pieces stand out against the dark counter." }
@@ -336,7 +354,7 @@ const COLOUR_WORDS: Record<ColourFamily, RegExp> = {
   beige: /\b(beige|cream|sand(?:-coloured)?|oatmeal|taupe)\b/gi,
   grey: /\b(grey|greige|slate|silver)\b/gi,
   black: /\b(black|charcoal|graphite)\b/gi,
-  brown: /\b(walnut|camel|espresso|teak)\b/gi,
+  brown: /\b(brown|camel|espresso)\b/gi,
   red: /\b(red|burgundy|maroon|oxblood)\b/gi,
   pink: /\b(pink|blush|rose)\b/gi,
   orange: /\b(orange|terracotta|rust|coral|apricot)\b/gi,
@@ -346,9 +364,11 @@ const COLOUR_WORDS: Record<ColourFamily, RegExp> = {
   purple: /\b(purple|plum|lavender|mauve|aubergine)\b/gi,
 };
 
-function constrainedText(text: string, c: Ctx): string {
+const capitalise = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+function constrainedText(text: string, c: Ctx, swap: string): string {
   let safe = text;
-  for (const family of c.avoidColours) safe = safe.replace(COLOUR_WORDS[family], "palette-safe");
+  for (const family of c.avoidColours) safe = safe.replace(COLOUR_WORDS[family], swap);
   if (c.has("pets")) safe = safe.replace(/\b(snake plant|money plant|pothos|ZZ plant)\b/gi, "pet-safe plant");
   if (c.needs("respiratory"))
     safe = safe
@@ -385,6 +405,8 @@ export function buildHomePlan(input: Answers): HomePlan {
   const c = context(input);
   const palettes = rankPalettes(c);
   const top = palettes[0];
+  // An excluded colour named in advice becomes a colour from your own top palette.
+  const swap = top.colours[1].name.toLowerCase();
   const names = top.colours.map((x) => x.name);
   const walls = c.paint ? `${names[0]} walls` : `Your walls stay as they are — ${names[0]} goes into rugs and throws`;
   const finishes = suggestFinishes(c, top);
@@ -408,7 +430,7 @@ export function buildHomePlan(input: Answers): HomePlan {
     const moods = c.moods.includes("calm") && c.moods.includes("energised")
       ? ["Keep most storage closed and surfaces clear, then concentrate colour and display in one intentional, well-lit focal zone."]
       : c.moods.map((m) => MOOD_LOOK[m]);
-    return [piece, ...access, ...(main ? [...moods, boldLook(c.boldness)] : [])].filter(Boolean).map((line) => constrainedText(line, c));
+    return [piece, ...access, ...(main ? [...moods, boldLook(c.boldness)] : [])].filter(Boolean).map((line) => capitalise(constrainedText(line, c, swap)));
   };
 
   const rooms = roomsFor(c).map((id): RoomPlan => {
@@ -418,11 +440,11 @@ export function buildHomePlan(input: Answers): HomePlan {
       .filter(({ m }) => !c.needs("respiratory") || !/wool|jute|sisal|velvet|upholstered headboard|dried grass/i.test(`${m.name} ${m.why}`))
       .sort((x, y) => y.up - x.up || x.i - y.i)
       .slice(0, 5)
-      .map(({ m }) => ({ name: constrainedText(m.name, c), why: constrainedText(m.why, c) }));
+      .map(({ m }) => ({ name: capitalise(constrainedText(m.name, c, swap)), why: capitalise(constrainedText(m.why, c, swap)) }));
     const buy: Record<Verdict, Item[]> = { now: [], later: [], skip: [] };
     for (const e of ESSENTIALS) {
       const v = at(e.room) === r.id ? e.item && c.owns(e.item) ? ["skip", "You said you are bringing this. Inspect it, measure the destination and replace it only if it is unsafe or no longer suitable."] as const : e.verdict(c) : null;
-      if (v) buy[v[0]].push({ name: e.name, cost: typeof e.cost === "function" ? e.cost(c) : e.cost, why: v[1], core: e.core, quantity: typeof e.quantity === "function" ? e.quantity(c) : e.quantity });
+      if (v) buy[v[0]].push({ name: e.name, cost: typeof e.cost === "function" ? e.cost(c) : e.cost, why: v[1], core: typeof e.core === "function" ? e.core(c) : e.core, quantity: typeof e.quantity === "function" ? e.quantity(c) : e.quantity });
     }
     const tips = TIPS.filter((t) => at(t.room) === r.id && (!t.when || t.when(c)));
     return {
@@ -459,7 +481,7 @@ export function buildHomePlan(input: Answers): HomePlan {
   const otherPurchases: Record<Verdict, Item[]> = { now: [], later: [], skip: [] };
   for (const chore of chores) {
     if (chore.hand !== "machine" || !chore.machine || represented(chore.machine.name)) continue;
-    otherPurchases.now.push({ name: chore.machine.name, cost: chore.machine.cost, why: chore.why });
+    otherPurchases.later.push({ name: chore.machine.name, cost: chore.machine.cost, why: chore.why });
   }
 
   const band = BUDGETS.find((b) => b.id === c.budget) ?? BUDGETS[1];

@@ -244,7 +244,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
                 ? `Your revised buy-now list is about ${span(p.budget.cost.now)}. It stays under the ceiling at the top of the estimate; later items add ${span(p.budget.cost.later)}.`
                 : p.budget.fit === "stretch"
                   ? `Your essential buy-now range is ${span(p.budget.cost.now)}. Only its lower end fits ${short(p.budget.total)}, so get written quotes before ordering; later items add ${span(p.budget.cost.later)}.`
-                  : `The remaining buy-now essentials run ${span(p.budget.cost.now)}, above ${short(p.budget.total)}. No feasible shopping plan exists at this ceiling yet.`}
+                  : `The essentials alone run ${span(p.budget.cost.now)}, above ${short(p.budget.total)}. Start with them, and add the rest as the budget allows.`}
             </p>
           </div>
           <div className="lg:col-span-7">
@@ -272,7 +272,7 @@ function Report({ answers, shared }: { answers: Answers; shared: boolean }) {
             {p.budget.postpone.length > 0 && (
               <div className="lg:col-span-4">
                 <h3 className="eyebrow">Moved to later</h3>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">The engine moved these non-essential purchases out of the immediate list until its upper estimate fit your ceiling.</p>
+                <p className="mt-3 text-sm leading-relaxed text-ink-soft">To keep the buy-now list within your budget, these moved to later. Bring any back if you’d rather spend there first.</p>
                 <ul className="mt-5 divide-y divide-line border-y border-line">
                   {p.budget.postpone.map((i) => (
                     <li key={i.name} className="flex items-baseline justify-between gap-4 py-3 text-sm">

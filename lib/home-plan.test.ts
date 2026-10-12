@@ -163,7 +163,7 @@ test("renters' fixed walls show in the preview unless they can repaint", () => {
 test("owners who haven't decided get finishes, and the kitchen follows the counter", () => {
   const own = buildHomePlan({ ...base, tenure: "own", cooking: "daily", fixtures: { floor: { id: "undecided" }, doors: { id: "undecided" }, walls: { id: "undecided" }, counter: { id: "undecided" }, cabinets: { id: "undecided" } } });
   assert.deepEqual(own.finishes.map((f) => f.label), ["Floor", "Doors", "Walls", "Kitchen cabinets", "Kitchen counter"]);
-  assert.equal(own.kitchen.fridge.name, "Silver steel (inox)");
+  assert.equal(own.kitchen.fridge.name, "Black or graphite finish"); // daily cooking → black granite suggested
   assert.equal(buildHomePlan(fx({ counter: { id: "light-stone" } })).kitchen.fridge.name === "Black or graphite finish", false);
   assert.equal(buildHomePlan(base).finishes.length, 0);
 });
@@ -236,9 +236,9 @@ test("who lives with you sizes the appliances, the table and the chores", () => 
   assert.match(item(family, "Refrigerator").why, /250–350 L/);
   assert.match(item(joint, "Refrigerator").why, /400–600 L/);
   assert.ok(costRange(item(joint, "Refrigerator").cost)![0] > costRange(item(alone, "Refrigerator").cost)![1] - 1);
-  assert.match(item(alone, "Washing machine after an installation check").why, /^6–7 kg/);
-  assert.match(item(joint, "Washing machine after an installation check").why, /^9–12 kg/);
-  assert.match(item(joint, "Dining table").why, /6 seats/);
+  assert.match(item(alone, "Washing machine (fully automatic)").why, /^6–7 kg/);
+  assert.match(item(joint, "Washing machine (fully automatic)").why, /^9–12 kg/);
+  assert.match(item(joint, "Dining table").why, /6-seater/);
   assert.ok(joint.chores.find((c) => c.task === "Laundry")!.hours > alone.chores.find((c) => c.task === "Laundry")!.hours);
   assert.ok(alone.summary.includes("Just you") && plan(["partner"]).summary.includes("2 people") && joint.summary.includes("About 6 people"));
 });
@@ -248,8 +248,8 @@ test("each household member brings advice of their own", () => {
   const names = (plan: ReturnType<typeof buildHomePlan>) => all(plan);
   const text = (plan: ReturnType<typeof buildHomePlan>) => [...plan.rooms.flatMap((r) => [...r.dos, ...r.donts, ...r.buy.now.map((i) => i.why), ...r.buy.later.map((i) => i.why)]), ...plan.checks].join(" ");
   assert.ok(names(p(["kids"], { childAges: ["under6"] })).includes("Age-appropriate childproofing") && !names(p([])).includes("Age-appropriate childproofing"));
-  assert.ok(!names(p(["elders"])).includes("Raised toilet seat"));
-  assert.ok(names(p(["elders"], { householdNeeds: ["mobility"] })).includes("Raised toilet seat"));
+  assert.equal(verdictOf(p(["elders"]), "Raised toilet seat"), "later");
+  assert.equal(verdictOf(p(["elders"], { householdNeeds: ["mobility"] }), "Raised toilet seat"), "now");
   assert.match(text(p(["elders"])), /lift works/);
   assert.match(text(p(["flatmates"])), /fridge shelf/);
   assert.match(text(p(["flatmates"])), /with a lock/);
@@ -289,8 +289,8 @@ test("weekdays, cooking and help each add their own advice, and only when they a
   assert.equal(verdictOf(liveIn, "Private bed and mattress for live-in help"), "now");
   assert.match(text(liveIn), /where live-in help will sleep/);
   assert.equal(liveIn.chores.find((c) => c.task === "Laundry")!.hand, "help");
-  assert.match(text(p({ help: "maid" })), /local verification and employment requirements/);
-  assert.doesNotMatch(text(p({ help: "none" })), /local verification and employment requirements|live-in|utility cupboard|your cook/);
+  assert.match(text(p({ help: "maid" })), /police-verified/);
+  assert.doesNotMatch(text(p({ help: "none" })), /police-verified|live-in|utility cupboard|your cook/);
   assert.match(text(p({ help: "maid-cook", helpDuties: ["cleaning", "dishes", "cooking"] })), /weekly menu/);
 
   // Cooking: a second cylinder for daily cooks, later for light cooks, never for those who order in.
@@ -304,7 +304,7 @@ test("weekdays, cooking and help each add their own advice, and only when they a
   assert.doesNotMatch(text(p({ work: "office" })), /white-noise|echo on calls/);
   assert.match(text(p({ work: "wfh" })), /echo on calls/);
   assert.match(text(p({ work: "hybrid" })), /foldable desk/);
-  assert.match(text(p({ tenure: "own", work: "wfh", climate: "north" })), /may run through the workday/);
+  assert.match(text(p({ tenure: "own", work: "wfh", climate: "north" })), /run it through the workday/);
 });
 
 test("the rooms follow the home: one room in a 1RK, no balcony section without one, extra bedrooms for whoever needs them", () => {
@@ -312,13 +312,13 @@ test("the rooms follow the home: one room in a 1RK, no balcony section without o
   const oneRoom = buildHomePlan({ ...base, home: "1rk" });
   assert.deepEqual(oneRoom.rooms.map((r) => r.id), ["bedroom", "kitchen", "bathroom", "balcony"]);
   assert.equal(oneRoom.rooms[0].name, "Your room");
-  assert.ok(oneRoom.rooms[0].buy.later.some((i) => i.name === "Sofa-cum-bed")); // only after the bed and circulation are measured
+  assert.ok(oneRoom.rooms[0].buy.later.some((i) => i.name === "Sofa-cum-bed")); // only if guests stay and there's room once the bed is in
 
   const noBalcony = buildHomePlan({ ...base, balcony: false });
   assert.ok(!noBalcony.rooms.some((r) => r.id === "balcony"));
   const bathroom = noBalcony.rooms.find((r) => r.id === "bathroom")!;
-  assert.ok(bathroom.buy.now.some((i) => i.name === "Washing machine after an installation check"));
-  assert.ok(!all(noBalcony).includes("Bird deterrence"));
+  assert.ok(bathroom.buy.now.some((i) => i.name === "Washing machine (fully automatic)"));
+  assert.ok(!all(noBalcony).includes("Bird net"));
   assert.notEqual(verdictOf(noBalcony, "Dryer"), "skip");
 
   assert.deepEqual(ids({ home: "3bhk", household: ["partner", "kids", "elders"] }).slice(5), ["parents", "kids"]);
@@ -381,30 +381,32 @@ test("how often people stay over decides the guest furniture", () => {
   assert.equal(verdictOf(plan("often", { home: "2bhk" }), "Folding bed with mattress"), undefined);
   assert.equal(verdictOf(plan("often", { home: "2bhk", household: ["kids"] }), "Sofa-cum-bed"), "now"); // spare room taken
   const table = (guests: Answers["guests"]) => plan(guests, { home: "2bhk", household: ["partner"], people: 4 }).rooms.flatMap((r) => r.buy.later).find((i) => i.name === "Dining table")!.why;
-  assert.match(table("sometimes"), /4 seats/);
-  assert.match(table("often"), /6 seats/);
+  assert.match(table("sometimes"), /4-seater/);
+  assert.match(table("often"), /6-seater/);
   // Unknown values are rejected rather than silently becoming a frequency.
   assert.equal(sanitizeAnswers({ ...base, guests: "weekly" }).guests, null);
 });
 
-test("rental work needs every relevant written permission", () => {
+test("rental work the landlord hasn't approved yet means asking first, not going without", () => {
   const partial = buildHomePlan({ ...base, climate: "north", cooking: "daily", rentalPermissions: ["drill"], budgetAmount: 1_200_000 });
-  assert.equal(verdictOf(partial, "Room AC after a load calculation"), "skip");
-  assert.equal(verdictOf(partial, "Bathroom exhaust fan"), "later");
-  assert.match(partial.rooms.flatMap((room) => [...room.buy.now, ...room.buy.later]).find((item) => item.name === "Kitchen ventilation")!.why, /do not cover all wall and exterior work/);
+  const why = (plan: ReturnType<typeof buildHomePlan>, name: string) => plan.rooms.flatMap((room) => [...room.buy.now, ...room.buy.later]).find((item) => item.name === name)!.why;
+  assert.equal(verdictOf(partial, "Split AC (inverter)"), "now");
+  assert.match(why(partial, "Split AC (inverter)"), /landlord's OK in writing/);
+  assert.match(why(partial, "Bathroom exhaust fan"), /written permission/);
+  assert.match(why(partial, "Auto-clean chimney (60 cm)"), /landlord's written OK/);
 
   const approved = buildHomePlan({ ...base, climate: "north", cooking: "daily", rentalPermissions: ["drill", "exterior"], budgetAmount: 1_200_000 });
-  assert.equal(verdictOf(approved, "Room AC after a load calculation"), "now");
-  assert.equal(verdictOf(approved, "Bathroom exhaust fan"), "now");
+  assert.doesNotMatch(why(approved, "Split AC (inverter)"), /landlord/);
+  assert.doesNotMatch(why(approved, "Auto-clean chimney (60 cm)"), /landlord/);
 });
 
 test("owned inventory and actual help duties override generic shopping rules", () => {
   const owned = buildHomePlan({ ...base, existingItems: ["bed", "mattress", "fridge", "washer"] });
-  for (const name of ["Bed with storage", "Mattress", "Refrigerator", "Washing machine after an installation check"]) assert.equal(verdictOf(owned, name), "skip", name);
+  for (const name of ["Bed with storage", "Mattress", "Refrigerator", "Washing machine (fully automatic)"]) assert.equal(verdictOf(owned, name), "skip", name);
 
   const cleaningOnly = buildHomePlan({ ...base, help: "maid", helpDuties: ["cleaning"], budgetAmount: 1_200_000 });
   assert.notEqual(verdictOf(cleaningOnly, "Dishwasher (with kadhai cycle)"), "skip");
-  assert.equal(cleaningOnly.chores.find((chore) => chore.task === "Dishes")!.hand === "help", false);
+  assert.notEqual(cleaningOnly.chores.find((chore) => chore.task === "Dishes")!.why, "Your help covers the bartan."); // not claimed as already covered
   const dishesIncluded = buildHomePlan({ ...base, help: "maid", helpDuties: ["cleaning", "dishes"], budgetAmount: 1_200_000 });
   assert.equal(verdictOf(dishesIncluded, "Dishwasher (with kadhai cycle)"), "skip");
 
@@ -414,17 +416,17 @@ test("owned inventory and actual help duties override generic shopping rules", (
 test("child, pet, respiratory and access advice is gated by the details supplied", () => {
   const unknownAge = buildHomePlan({ ...base, home: "3bhk", household: ["kids"], childAges: ["unknown"], people: 2 });
   const childBed = unknownAge.rooms.flatMap((room) => room.buy.now).find((item) => item.name === "Age-appropriate bed and mattress")!;
-  assert.match(childBed.why, /do not choose an upper bunk until/);
+  assert.match(childBed.why, /top bunks are for six and up/);
 
   const bird = buildHomePlan({ ...base, household: ["pets"], petTypes: ["bird"], people: 1 });
   const birdText = [...bird.checks, ...bird.rooms.flatMap((room) => [...room.buy.now, ...room.buy.later].map((item) => item.why))].join(" ");
-  assert.match(birdText, /avian veterinarian/);
+  assert.match(birdText, /avian vet/);
   assert.doesNotMatch(birdText, /areca palm|spider plant|calathea|snake plant|money plant|pothos/i);
-  assert.equal(verdictOf(bird, "Balcony safety barrier assessment"), undefined);
+  assert.equal(verdictOf(bird, "Balcony safety grill"), undefined);
 
   const access = buildHomePlan({ ...base, householdNeeds: ["mobility", "low-vision"] });
-  const support = access.rooms.flatMap((room) => room.buy.now).find((item) => item.name === "Wet-area slip and support assessment")!;
-  assert.match(support.why, /Do not use a suction rail/);
+  const support = access.rooms.flatMap((room) => room.buy.now).find((item) => item.name === "Grab bars and anti-skid mats")!;
+  assert.match(support.why, /suction rails can't take body weight/i);
   assert.ok(access.constraints.some((text) => text.includes("occupational-therapy")));
   assert.ok(access.constraints.some((text) => text.includes("low-vision assessment")));
 
@@ -459,7 +461,7 @@ test("generated colours and finishes obey hard colour exclusions", () => {
 test("large homes and exact ceilings do not collapse into generic family advice", () => {
   const large = buildHomePlan({ ...base, home: "6bhk-plus", household: ["partner", "kids", "elders"], childAges: ["teen"], people: 12, guests: "often", work: "wfh", budgetAmount: 2_000_000 });
   assert.deepEqual(large.rooms.slice(5).map((room) => room.id), ["parents", "kids", "study", "guest"]);
-  assert.match(large.rooms.flatMap((room) => [...room.buy.now, ...room.buy.later]).find((item) => item.name === "Dining table")!.why, /14 seats/);
+  assert.match(large.rooms.flatMap((room) => [...room.buy.now, ...room.buy.later]).find((item) => item.name === "Dining table")!.why, /Seating for 14/);
   assert.ok(large.constraints.some((text) => text.includes("6BHK and larger")));
 
   const impossible = buildHomePlan({ ...base, budget: "tight", budgetAmount: 10000 });

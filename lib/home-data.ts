@@ -254,13 +254,15 @@ export interface Essential {
   name: string;
   cost: string | ((c: Ctx) => string); // a function when the right size depends on the household
   verdict: (c: Ctx) => [Verdict, string] | null; // null = not relevant for this home
-  core?: true; // needed to sleep, eat, wash or stay safe from day one — never suggested for postponing
+  core?: true | ((c: Ctx) => boolean); // needed to sleep, eat, wash, work or stay safe from day one — never postponed
   item?: ExistingItem; // suppresses a duplicate purchase when the person is bringing one
   quantity?: number | ((c: Ctx) => number);
 }
 
 // Sized appliance and furniture prices are deliberately broad and must be replaced with current written quotes before purchase.
 // Room for two more at the table when people often stay over.
+// Up to eight is one table; beyond that, two tables side by side beat one giant one.
+const tableFor = (c: Ctx) => (seats(c) <= 8 ? `A ${seats(c)}-seater` : `Seating for ${seats(c)} — two tables side by side`);
 const seats = (c: Ctx) => {
   const n = c.people + (c.guests === "often" ? 2 : 0);
   return n <= 4 ? 4 : n <= 6 ? 6 : n <= 8 ? 8 : n <= 10 ? 10 : n <= 12 ? 12 : n;
@@ -279,33 +281,33 @@ const sofaAdvice = (c: Ctx) =>
 
 export const ESSENTIALS: Essential[] = [
   // Bedroom
-  { room: "bedroom", name: "Bed with storage", item: "bed", core: true, cost: "₹18k–45k", verdict: (c) => ["now", [c.rent ? "Pick a knock-down model that dismantles for the next move; measure the lift, room and open-lid clearance before choosing hydraulic storage." : "Measure the room and walking clearance before choosing hydraulic storage; drawers can work better where the lid cannot open.", c.has("partner") && "A queen can suit two adults if it leaves usable circulation."].filter(Boolean).join(" ")] },
-  { room: "bedroom", name: "Mattress", item: "mattress", core: true, cost: "₹12k–35k", verdict: (c) => ["now", hot(c) ? "Try the mattress in person and use the maker's exchange period; breathable constructions usually sleep cooler than dense foam." : "Comfort and support are individual — try it in person and use a meaningful exchange period rather than relying on an ‘orthopaedic’ label."] },
+  { room: "bedroom", name: "Bed with storage", item: "bed", core: true, cost: "₹18k–45k", verdict: (c) => ["now", [c.rent ? "Pick a knock-down model that dismantles for the next move; the storage swallows quilts and suitcases." : "Indian flats run short of storage — this holds quilts, suitcases and off-season clothes.", "Check the lid can open fully where it'll stand; drawers work better in a tight room.", c.has("partner") && "Queen (5×6.5 ft) is the right size for two."].filter(Boolean).join(" ")] },
+  { room: "bedroom", name: "Mattress", item: "mattress", core: true, cost: "₹12k–35k", verdict: (c) => ["now", hot(c) ? "Latex or pocket-spring sleeps cooler than memory foam in Indian summers. Lie on it in a store and keep the trial period." : "The one thing worth spending on — you use it eight hours a day. Lie on it in a store; ‘orthopaedic’ is a label, not a firmness."] },
   { room: "bedroom", name: "Built-in sliding wardrobe", item: "wardrobe", cost: "₹60k–1.5L", verdict: (c) => (!c.own ? null : tight(c) ? ["later", "At this budget, start with a freestanding wardrobe and build in once the essentials fit."] : ["now", `Get carpentry done before you move in — dust and workers are far easier in an empty flat.${c.has("partner") ? " Allow about 2 ft of hanging width per adult." : ""}`]) },
   { room: "bedroom", name: "Freestanding wardrobe", item: "wardrobe", cost: "₹12k–35k", verdict: (c) => (c.rent ? ["now", ["Use a freestanding model that moves with you.", c.has("partner") && "A 3-door gives you each your own side.", c.has("flatmates") && "Get one with a lock — flatmates come and go."].filter(Boolean).join(" ")] : tight(c) ? ["now", "Covers you until the built-in, then moves to a spare room."] : null) },
-  { room: "bedroom", name: "BLDC ceiling fan", item: "fan", core: true, cost: "₹3k–6k each", quantity: (c) => bedroomCount(c) + (c.home === "1rk" ? 0 : 1), verdict: (c) => (c.climate === "hills" ? ["later", "Audit each bedroom and the living room for an existing safe fan point before buying; cool climates may not need every unit."] : ["now", "This allowance covers the bedrooms and living room. Confirm every fan point is safe and empty; subtract working fans you already have before ordering."]) },
-  { room: "bedroom", name: "Room AC after a load calculation", item: "ac", cost: "₹30k–65k", verdict: (c) => (c.climate === "hills" ? null : c.rent && (!c.allowDrill || !c.allowExterior) ? ["skip", "A split AC needs wall and exterior work that your current permissions do not fully allow. Revisit this only with written approval and a qualified installer."] : c.climate === "mild" ? ["later", "See how the room performs through a hot week first; size any unit from floor area, ceiling height, sun, insulation and occupancy."] : ["now", `${c.work === "wfh" ? "Efficiency matters because it may run through the workday. " : ""}Do not choose tonnage from the city alone: have the installer calculate the room's cooling load, then confirm the electrical circuit and outdoor-unit location.`]) },
-  { room: "bedroom", name: "Oil-filled room heater", item: "heater", cost: "₹7k–14k", verdict: (c) => (c.climate === "hills" ? ["now", "Use a thermostatic, tip-over-protected model on a suitable wall outlet, clear of bedding and children or pets; heating still lowers relative humidity."] : c.climate === "north" ? ["later", "If the room needs one in winter, choose tip-over and overheat protection and keep it clear of fabrics."] : null) },
+  { room: "bedroom", name: "BLDC ceiling fan", item: "fan", core: true, cost: "₹3k–6k each", quantity: (c) => bedroomCount(c) + (c.home === "1rk" ? 0 : 1), verdict: (c) => (c.climate === "hills" ? ["later", "Cool climates rarely need one in every room — fit them where summer afternoons still warm up."] : ["now", "Unfurnished flats often have bare fan points. BLDC fans use about half the power and pay off in two summers. Counted for each bedroom and the living room."]) },
+  { room: "bedroom", name: "Split AC (inverter)", item: "ac", cost: "₹30k–65k", verdict: (c) => (c.climate === "hills" ? null : c.climate === "mild" ? ["later", "Mild cities rarely need one — see how your first summer feels."] : ["now", [c.rent && !(c.allowDrill && c.allowExterior) && "The outdoor unit needs drilling — get the landlord's OK in writing first.", c.work === "wfh" ? "Go 5-star: you'll run it through the workday." : "Go 3- or 5-star inverter; it pays back on the bill within a few summers.", "1 ton suits a room up to about 120 sq ft and 1.5 ton up to about 180 sq ft — go a size up for a top floor or west sun."].filter(Boolean).join(" ")]) },
+  { room: "bedroom", name: "Oil-filled room heater", item: "heater", cost: "₹7k–14k", verdict: (c) => (c.climate === "hills" ? ["now", "Warms evenly without burning oxygen. Pick one with a thermostat and tip-over cut-off, and keep it clear of bedding."] : c.climate === "north" ? ["later", "Buy before December, when prices climb — one with a thermostat and tip-over cut-off."] : null) },
   { room: "bedroom", name: "Blackout curtains", cost: "₹1.5k–4k per window", verdict: (c) => ["now", c.work === "long" ? "Shift and late workers need real darkness to sleep in the day." : hot(c) ? "Lined curtains block afternoon heat as well as light." : "Privacy from day one — apartment windows often face the next building."] },
-  { room: (c) => (hasRoom(c, "study") ? "study" : "bedroom"), name: "Work desk and ergonomic chair", item: "desk", cost: "₹12k–30k", verdict: (c) => (c.work === "wfh" ? ["now", `If you spend full working days here, fit and adjustability matter more than the desk's style.${c.has("partner") ? " If your partner also works from home, verify whether a second workstation is needed." : ""}`] : c.work === "hybrid" ? ["now", "Even two home days a week deserve a supportive chair; a foldable desk clears away on office days."] : ["skip", "The dining table or a counter covers the odd laptop evening."]) },
-  { room: "bedroom", name: "Private bed and mattress for live-in help", core: true, cost: "₹10k–20k", verdict: (c) => (c.helpLivesIn ? ["now", "Provide a proper private sleeping arrangement and agree access, hours and a weekly day off before move-in."] : null) },
+  { room: (c) => (hasRoom(c, "study") ? "study" : "bedroom"), name: "Work desk and ergonomic chair", item: "desk", core: (c) => c.work === "wfh", cost: "₹12k–30k", verdict: (c) => (c.work === "wfh" ? ["now", `You spend 40+ hours a week here — the chair matters more than the desk.${c.has("partner") ? " If your partner works from home too, plan a second desk — two calls in one room don't work." : ""}`] : c.work === "hybrid" ? ["now", "Even two home days a week deserve a proper chair; a foldable desk clears away on office days."] : ["skip", "The dining table or a counter covers the odd laptop evening."]) },
+  { room: "bedroom", name: "Private bed and mattress for live-in help", core: true, cost: "₹10k–20k", verdict: (c) => (c.helpLivesIn ? ["now", "A metal single bed and a firm mattress — they deserve a proper bed and some privacy, not a mat on the floor."] : null) },
   { room: "bedroom", name: "Dressing table", cost: "₹8k–20k", verdict: (c) => (c.small ? ["skip", "A mirror on the wardrobe door and one shelf inside does the same job in less space."] : null) },
   { room: "bedroom", name: "Bedside lamps", cost: "₹1.5k–5k", verdict: (c) => ["later", c.has("partner") ? "One on each side, so one of you can read while the other sleeps." : "Warm 2700K light at bed height beats the ceiling tube light at night."] },
 
   // Parents' room
-  { room: "parents", name: "Bed for your parents", core: true, cost: "₹15k–40k", verdict: (c) => (hasRoom(c, "parents") ? ["now", "Have the sleeper test the bed height, edge support and transfer clearance; do not prescribe height from age alone."] : null) },
-  { room: "parents", name: "Mattress chosen for the sleeper", core: true, cost: "₹12k–30k", verdict: (c) => (hasRoom(c, "parents") ? ["now", "Have the person try the support and edge stability themselves; ‘orthopaedic’ is a marketing label, not a universal firmness prescription."] : null) },
+  { room: "parents", name: "Bed for your parents", core: true, cost: "₹15k–40k", verdict: (c) => (hasRoom(c, "parents") ? ["now", "About 18–20 in high suits most people. Have them sit on it in the store: feet flat, knees level, easy to stand up."] : null) },
+  { room: "parents", name: "Supportive mattress for your parents", core: true, cost: "₹12k–30k", verdict: (c) => (hasRoom(c, "parents") ? ["now", "Let them lie on it before you buy — firm enough to get up from easily. ‘Orthopaedic’ is a label, not a firmness."] : null) },
   { room: "parents", name: "Wardrobe for your parents", cost: "₹12k–35k", verdict: (c) => (hasRoom(c, "parents") ? ["now", "Shelves between knee and shoulder height — no step stool, no bending to the floor."] : null) },
   { room: "parents", name: "Motion-sensor night lights", core: true, cost: "₹500–1.5k", verdict: (c) => (hasRoom(c, "parents") ? ["now", "Bulb or plug-in lights between the bed and the bathroom that switch on by themselves."] : null) },
   { room: "parents", name: "Armchair with armrests", cost: "₹8k–20k", verdict: (c) => (hasRoom(c, "parents") ? ["later", "A firm chair to read or pray in, and to sit on while dressing."] : null) },
 
   // Kids' room (toys and homework live in the living room when the kids share your room)
-  { room: "kids", name: "Age-appropriate bed and mattress", core: true, cost: "₹14k–30k", verdict: (c) => (hasRoom(c, "kids") ? ["now", c.childAges.some((age) => age === "under6" || age === "unknown") ? "Use a low single or trundle bed; do not choose an upper bunk until you have confirmed that every intended sleeper meets the maker's minimum age. Anchor nearby tall furniture." : "A standard single or trundle is easier to inspect and make safe. If considering bunks, verify guardrails, mattress fit, ceiling clearance and the maker's age limit."] : null) },
-  { room: "bedroom", name: "Separate sleeping place for children", core: true, cost: "₹8k–30k", verdict: (c) => (c.has("kids") && !hasRoom(c, "kids") ? ["now", c.childAges.some((age) => age === "under6" || age === "unknown") ? "The current room plan has no dedicated kids' room. Measure for a low single or trundle; do not choose an upper bunk until every intended sleeper's age is known and permitted by the maker." : "The current room plan has no dedicated kids' room. Measure for a separate single, trundle or other proper sleeping place before buying more furniture."] : null) },
-  { room: "bedroom", name: "Separate sleeping place for older household members", core: true, cost: "₹15k–40k", verdict: (c) => (c.has("elders") && !hasRoom(c, "parents") ? ["now", "The room allocation has no separate parents' room. Confirm a private, accessible sleeping arrangement with clear circulation; do not assume they will share the main bed."] : null) },
-  { room: "kids", name: "Kids' wardrobe", cost: "₹12k–35k", verdict: (c) => (hasRoom(c, "kids") ? ["now", c.rent ? "Choose stable, low storage or get written permission for the maker-specified anti-tip fixing; do not improvise the anchor." : "Built in or maker-anchored, with a low rail they can reach now and raise later."] : null) },
-  { room: (c) => (hasRoom(c, "kids") ? "kids" : "living"), name: "Low storage with bins", cost: "₹2.5k–6k", verdict: (c) => (c.childAges.includes("under6") || c.childAges.includes("6to12") || c.childAges.includes("unknown") ? ["now", "Use stable, low storage for toys and daily things; anchor anything climbable."] : null) },
-  { room: (c) => (hasRoom(c, "kids") ? "kids" : "living"), name: "Age-adjustable study desk and chair", cost: "₹3k–15k", verdict: (c) => (c.childAges.some((age) => age === "6to12" || age === "teen" || age === "unknown") ? ["later", "Fit the desk and chair to the child's current height and screen or homework use; do not buy from age alone."] : null) },
+  { room: "kids", name: "Age-appropriate bed and mattress", core: true, cost: "₹14k–30k", verdict: (c) => (hasRoom(c, "kids") ? ["now", c.childAges.some((age) => age === "under6" || age === "unknown") ? "A low single or trundle while they're small — top bunks are for six and up. Anchor any tall furniture nearby." : "A standard single (3×6.5 ft) they won't outgrow. Sharing? A bunk with full guardrails, and the right mattress depth for them."] : null) },
+  { room: "bedroom", name: "Separate sleeping place for children", core: true, cost: "₹8k–30k", verdict: (c) => (c.has("kids") && !hasRoom(c, "kids") ? ["now", c.childAges.some((age) => age === "under6" || age === "unknown") ? "There's no spare room for the kids, so give them their own sleeping spot in yours — a low single or a trundle. Skip bunks until they're old enough for the top." : "There's no spare room for the kids, so give them their own single or trundle before buying anything else."] : null) },
+  { room: "bedroom", name: "Separate sleeping place for older household members", core: true, cost: "₹15k–40k", verdict: (c) => (c.has("elders") && !hasRoom(c, "parents") ? ["now", "There's no spare room for your parents, so plan a proper bed for them — a sofa-cum-bed in the living room, or a single with a screen for privacy."] : null) },
+  { room: "kids", name: "Kids' wardrobe", cost: "₹12k–35k", verdict: (c) => (hasRoom(c, "kids") ? ["now", c.rent ? "Low and stable, or ask the landlord to allow an anti-tip strap — tall wardrobes must be fixed to the wall." : "Built in, with a low rail they can reach now and raise later."] : null) },
+  { room: (c) => (hasRoom(c, "kids") ? "kids" : "living"), name: "Low storage with bins", cost: "₹2.5k–6k", verdict: (c) => (c.childAges.includes("under6") || c.childAges.includes("6to12") || c.childAges.includes("unknown") ? ["now", "Low shelves and bins they can reach — tidying up becomes their job."] : null) },
+  { room: (c) => (hasRoom(c, "kids") ? "kids" : "living"), name: "Age-adjustable study desk and chair", cost: "₹3k–15k", verdict: (c) => (c.childAges.some((age) => age === "6to12" || age === "teen" || age === "unknown") ? ["later", "Buy when homework starts; a height-adjustable set grows with them."] : null) },
 
   // Study
   { room: "study", name: "Bookshelf", cost: "₹2.5k–8k", verdict: (c) => (hasRoom(c, "study") ? ["later", "Closed doors below hide cables and files; open shelves above for books."] : null) },
@@ -319,13 +321,13 @@ export const ESSENTIALS: Essential[] = [
   // Kitchen
   { room: "kitchen", name: "Modular kitchen (BWP ply)", cost: "₹1.5L–4L", verdict: (c) => (!c.own || c.fix.cabinets ? null : tight(c) ? ["later", "A full modular kitchen will not fit this ceiling alongside the core appliances. Use temporary storage and price it as a separate project."] : ["now", c.cooking === "rarely" ? "Keep it to a simple straight run with fewer drawers, and compare its quote with your total ceiling before ordering." : "Book it only after a measured layout and written BOQ; design, making and fitting commonly take several weeks."]) },
   { room: "kitchen", name: "Steel racks and a kitchen trolley", cost: "₹3k–10k", verdict: (c) => (c.rent && !c.fix.cabinets ? ["now", "The flat has no cabinets, so freestanding racks add storage without drilling."] : c.own && !c.fix.cabinets && tight(c) ? ["now", "Storage for now; they can move to a utility area if a fitted kitchen is added later."] : null) },
-  { room: "kitchen", name: "Kitchen ventilation", cost: "₹2k–20k", verdict: (c) => (c.cooking === "daily" ? c.rent && (!c.allowDrill || !c.allowExterior) ? ["now", "Your rental permissions do not cover all wall and exterior work a new duct may require. Use an existing safe exhaust provision, or get written approval before choosing any wall-mounted or ducted unit."] : ["now", "Choose an exhaust fan or chimney only after checking the existing opening, duct route, make-up air and mounting permission."] : c.cooking === "light" ? ["later", "Use an existing safe exhaust provision first; add more ventilation only if steam and oil are not clearing."] : ["skip", "Occasional reheating does not justify permanent ventilation work unless the room already has a poor-air problem."]) },
-  { room: "kitchen", name: "Kitchen exhaust fan", cost: "₹1.5k–3k", verdict: (c) => (c.cooking === "daily" ? null : c.rent && (!c.allowDrill || !c.allowExterior) ? ["skip", "A new exterior-discharge fan is outside the current wall or exterior permissions. Use an existing safe provision or obtain written approval."] : ["now", "Choose one only after confirming a safe exterior discharge route, opening size, make-up air and electrical point."]) },
-  { room: "kitchen", name: "Gas stove (3-burner)", item: "stove", core: true, cost: "₹4k–9k", verdict: (c) => (c.cooking === "rarely" ? ["skip", "An induction cooktop covers the odd meal — no cylinder to arrange."] : ["now", "Apply to transfer your gas connection before moving and confirm the supplier's current lead time and installation requirements."]) },
-  { room: "kitchen", name: "Second gas cylinder (DBC)", cost: "₹1.5k–2.5k deposit", verdict: (c) => (c.cooking === "daily" ? ["now", "Daily cooking can make refill timing disruptive; compare an authorised second-cylinder connection with your actual consumption and the supplier's current rules."] : c.cooking === "light" ? ["later", "Worth considering only if your real refill pattern makes it useful and the supplier permits it."] : null) },
+  { room: "kitchen", name: "Auto-clean chimney (60 cm)", cost: "₹11k–20k", verdict: (c) => (c.cooking === "daily" ? ["now", c.rent ? `Daily tadka coats the walls in oil within months.${c.allowDrill && c.allowExterior ? "" : " It needs a duct hole — get the landlord's written OK first."}` : "Daily tadka coats walls and shutters in oil within months; auto-clean spares you scrubbing filters. Plan the duct route with the kitchen."] : c.cooking === "light" ? ["later", "Start with an exhaust fan; add a chimney if the walls start feeling sticky."] : ["skip", "An exhaust fan handles occasional cooking."]) },
+  { room: "kitchen", name: "Kitchen exhaust fan", cost: "₹1.5k–3k", verdict: (c) => (c.cooking === "daily" ? null : ["now", c.rent && !(c.allowDrill && c.allowExterior) ? "Use the existing fan opening if there is one; a new hole needs the landlord's written OK." : "Cheap, and it clears smells and steam."]) },
+  { room: "kitchen", name: "Gas stove (3-burner)", item: "stove", core: true, cost: "₹4k–9k", verdict: (c) => (c.cooking === "rarely" ? ["skip", "An induction cooktop covers the odd meal — no cylinder to arrange."] : ["now", "Apply to transfer your gas connection before moving; it can take a week or two."]) },
+  { room: "kitchen", name: "Second gas cylinder (DBC)", cost: "₹1.5k–2.5k deposit", verdict: (c) => (c.cooking === "daily" ? ["now", "Daily cooking empties a cylinder in about a month; a refundable second-cylinder deposit means no waiting for a refill."] : c.cooking === "light" ? ["later", "Worth adding if refills keep arriving late."] : null) },
   { room: "kitchen", name: "Induction cooktop", item: "induction", core: true, cost: "₹2.5k–5k", verdict: (c) => ["now", c.cooking === "rarely" ? "Your main cooktop — plug in and go." : "Backup for the days before the gas connection arrives, and when the cylinder runs out."] },
-  { room: "kitchen", name: "Refrigerator", item: "fridge", core: true, cost: (c) => bySize(c, "₹14k–30k", "₹25k–45k", c.people <= 8 ? "₹45k–90k" : "₹70k–1.5L"), verdict: (c) => ["now", `${bySize(c, "190–250 L is usually enough for one or two; check the current star label.", "250–350 L usually suits three or four; check the current star label.", c.people <= 8 ? "Compare 400–600 L models against your actual weekly food storage." : "For nine or more people, measure the kitchen and compare one very large unit with two smaller units; a generic family-size fridge is not enough.")}${c.cooking === "daily" ? " Daily cooking may justify more freezer space." : ""}`] },
-  { room: "kitchen", name: "Water test and matched treatment", item: "purifier", core: true, cost: "₹500–20k", verdict: () => ["now", "Get the supplier or an accredited lab report for microbial and chemical contaminants, and test hardness separately. Choose a certified treatment system for those results; TDS alone cannot decide RO versus UV or prove that water is safe."] },
+  { room: "kitchen", name: "Refrigerator", item: "fridge", core: true, cost: (c) => bySize(c, "₹14k–30k", "₹25k–45k", c.people <= 8 ? "₹45k–90k" : "₹70k–1.5L"), verdict: (c) => ["now", `${bySize(c, "190–250 L is plenty for one or two; pick 3-star or better.", "250–350 L double door for three or four — it runs 24/7, so check the star rating.", c.people <= 8 ? "400–600 L for five or more: a large double door or convertible holds a week of sabzi and milk." : "For nine or more, two fridges usually beat one giant — measure the kitchen first.")}${c.cooking === "daily" ? " Cooking daily, favour a bigger freezer for batch-cooked gravies, peas and paneer." : ""}`] },
+  { room: "kitchen", name: "Water purifier", item: "purifier", core: true, cost: "₹9k–20k", verdict: () => ["now", "Test the water first: TDS alone can't decide between RO and UV, but a lab report on microbes and hardness can. Then buy what it calls for."] },
   { room: "kitchen", name: "Mixer grinder (750 W)", item: "mixer", cost: "₹3k–7k", verdict: (c) => (c.cooking === "daily" ? ["now", "Chutneys, masalas, batter — an Indian kitchen staple."] : c.cooking === "light" ? ["later", "Buy it when you catch yourself wanting chutney."] : ["skip", "Rarely-used appliances eat counter space."]) },
   { room: "kitchen", name: "Microwave or OTG", item: "microwave", cost: "₹6k–15k", verdict: (c) => (c.cooking === "rarely" || c.busy ? ["now", "Reheating leftovers and tiffin is part of your routine."] : ["later", "Useful, not urgent — the stove does most of it."]) },
   { room: "kitchen", name: "Dishwasher (with kadhai cycle)", item: "dishwasher", cost: (c) => bySize(c, "₹20k–25k", "₹30k–40k", "₹40k–53k"), verdict: (c) => (c.cooking === "rarely" ? ["skip", "Not enough dishes to fill it."] : c.helpDoes("dishes") ? ["skip", "Dishes are already in the duties you selected, so compare the machine with the existing arrangement before buying."] : tight(c) ? ["later", "At this ceiling, compare the machine's purchase, plumbing and running cost with local dishwashing help before committing."] : c.busy || c.has("kids") ? ["now", `It can cut hands-on washing, though loading, unloading and unsuitable cookware remain. ${dishwasherSize(c)}`] : ["later", `Try a month of doing dishes yourself; if the load is material, compare this with paid help. ${dishwasherSize(c)}`]) },
@@ -333,14 +335,14 @@ export const ESSENTIALS: Essential[] = [
   { room: "kitchen", name: "Modular add-ons (magic corner, tall unit)", cost: "₹15k–60k", verdict: (c) => (!c.own ? null : c.budget === "high" || c.budget === "premium" ? ["later", "Add them once you know how you actually use the kitchen."] : c.cooking === "daily" && !tight(c) ? ["later", "A tall pantry unit earns its place in a daily kitchen; skip the magic corner."] : ["skip", "Add-ons inflate modular quotes fast; plain shelves and baskets do most of the work."]) },
 
   // Bathroom
-  { room: "bathroom", name: "Geyser after a demand and circuit check", item: "geyser", core: true, cost: (c) => bySize(c, "₹6k–10k", "₹8k–13k", "₹10k–20k"), quantity: (c) => Math.max(1, c.bathrooms ?? 1), verdict: (c) => (c.climate === "humid" ? ["later", "Confirm whether hot water is needed, then size storage from simultaneous demand and the available electrical circuit rather than assuming a 3 L unit."] : ["now", `There ${c.bathrooms === 1 ? "is one bathroom" : `are ${c.bathrooms ?? "multiple"} bathrooms`}; confirm which need hot water, simultaneous use, mounting position, earthing and RCD/RCCB protection before choosing capacity.`]) },
-  { room: "bathroom", name: "Bathroom exhaust fan", cost: "₹1.5k–3k", verdict: (c) => (c.rent && (!c.allowDrill || !c.allowExterior) ? ["later", "Use an existing safe exhaust opening; new wall or exterior work needs written permission."] : ["now", c.climate === "humid" ? "Confirm a safe exterior discharge route so monsoon moisture does not settle on grout." : "Confirm a safe exterior discharge route so damp and smells do not recirculate."]) },
-  { room: "bathroom", name: "Wet-area slip and support assessment", core: true, cost: "₹1k–8k", verdict: (c) => (c.needs("mobility") || c.needs("wheelchair") ? ["now", c.rent && !c.allowDrill ? "Do not use a suction rail for body-weight support. Ask an occupational therapist or accessibility professional about a properly fitted toilet frame or a structurally fixed bar with written permission." : "Have the user's transfer and reach assessed, then fix a rated grab bar into suitable structure; suction rails are not body-weight support."] : ["later", "Check wet-area slip resistance and drainage; avoid loose mats in circulation and add support equipment only for an identified balance or transfer need."]) },
-  { room: "bathroom", name: "Raised toilet seat", cost: "₹1.5k–3k", verdict: (c) => (c.needs("mobility") ? ["later", "Only buy after checking the user's height, toilet dimensions, stability and transfer technique; a fitted toilet frame may be safer."] : null) },
+  { room: "bathroom", name: "Geyser", item: "geyser", core: true, cost: (c) => bySize(c, "₹6k–10k", "₹8k–13k", "₹10k–20k"), quantity: (c) => Math.max(1, c.bathrooms ?? 1), verdict: (c) => (c.climate === "humid" ? ["later", "Coastal winters are mild — a 3 L instant geyser may be all you need."] : ["now", `${bySize(c, "15 L covers two showers back to back.", "25 L covers three or four showers back to back.", "35 L, or one per bathroom, so the last shower isn't cold.")}${(c.bathrooms ?? 1) > 1 ? " Counted for each bathroom." : ""} ${c.climate === "mild" ? "Mornings get cold in winter; 5-star models keep the bill down." : "Non-negotiable in winter; get a 5-star one with a timer."} Ask the electrician to put it on an earthed circuit with an RCCB.`]) },
+  { room: "bathroom", name: "Bathroom exhaust fan", cost: "₹1.5k–3k", verdict: (c) => ["now", `${c.climate === "humid" ? "Without one, monsoon damp turns grout black within a season." : "Stops damp and smells settling in."}${c.rent && !(c.allowDrill && c.allowExterior) ? " Use the existing opening; a new one needs written permission." : ""}`] },
+  { room: "bathroom", name: "Grab bars and anti-skid mats", core: true, cost: "₹1k–8k", verdict: (c) => (c.needs("mobility") || c.needs("wheelchair") ? ["now", c.rent && !c.allowDrill ? "Suction rails can't take body weight. Ask the landlord to allow a fixed grab bar, or use a freestanding toilet frame meanwhile." : "Fix rated grab bars into the wall by the WC and shower — suction rails can't take body weight."] : c.has("elders") ? ["now", `Anti-skid mats inside and outside the shower, and a fixed grab bar by the WC — wet floors are the top fall risk at home.${c.rent && !c.allowDrill ? " Ask the landlord about fixing the bar." : ""}`] : c.childAges.some((age) => age === "under6" || age === "unknown") ? ["now", "Anti-skid mats inside and outside the shower."] : ["later", "An anti-skid mat outside the shower is enough for now."]) },
+  { room: "bathroom", name: "Raised toilet seat", core: (c) => c.needs("mobility"), cost: "₹1.5k–3k", verdict: (c) => (c.needs("mobility") ? ["now", "Easier on knees and hips; clamp-on models need no fitting. Check the height with the person who'll use it."] : c.has("elders") ? ["later", "Worth it if getting up is hard — try one first."] : null) },
   { room: "bathroom", name: "Shower curtain and tension rod", cost: "₹800–2k", verdict: (c) => (c.rent ? ["now", "Keeps the wet area separate without a single hole."] : null) },
   { room: "bathroom", name: "Glass shower partition", cost: "₹15k–35k", verdict: (c) => (c.rent ? ["skip", "A curtain does the same job and leaves with you."] : ["later", "Check water hardness first — hard water leaves white scale on glass every week."]) },
   { room: "bathroom", name: "Mirror cabinet or rack", cost: "₹2k–8k", verdict: (c) => ["now", c.rent ? "Over-the-door or freestanding — no drilling into tiles." : "PVC or aluminium, never MDF — it swells within a monsoon."] },
-  { room: "bathroom", name: "Generic shower filter", cost: "₹1.5k–3k", verdict: () => ["skip", "Do not buy from a TDS reading alone. Test hardness and the specific contaminant first; many shower filters do not soften water or solve scale."] },
+  { room: "bathroom", name: "Generic shower filter", cost: "₹1.5k–3k", verdict: () => ["skip", "Most shower filters don't soften hard water. Test the hardness first — a whole-flat softener is what actually stops scale."] },
   { room: "bathroom", name: "Bathtub", cost: "₹25k+", verdict: (c) => (c.own && (c.budget === "high" || c.budget === "premium") ? ["skip", "Rarely used in Indian homes, and it eats space and water."] : null) },
 
   // Living room
@@ -351,7 +353,7 @@ export const ESSENTIALS: Essential[] = [
           ? ["skip", "Nobody stays over, so the fold-out bed would go unused — a regular sofa sits better and costs less."]
           : null
         : c.home === "1rk"
-          ? ["later", "Do not buy this alongside the main bed by default. Add it only after measuring the room and confirming that occasional guests justify the lost floor space."]
+          ? ["later", "Add one only if guests stay over and the room still has space to walk once your bed is in."]
           : c.home === "1bhk"
             ? c.guests === "often"
               ? ["now", "Family stays often — a sofa-cum-bed beats a mattress on the floor."]
@@ -359,24 +361,24 @@ export const ESSENTIALS: Essential[] = [
             : c.guests === "often" && !hasRoom(c, "guest") && !hasRoom(c, "study")
               ? ["now", "Family stays often and there's no spare room for them — this is your guest bed."]
               : null },
-  { room: "living", name: "Age-appropriate childproofing", core: true, cost: "₹250–3k", verdict: (c) => (c.childAges.includes("under6") ? ["now", "Cover reachable unused sockets, secure blind cords, gate dangerous edges and anchor climbable furniture before moving in."] : null) },
+  { room: "living", name: "Age-appropriate childproofing", core: true, cost: "₹250–3k", verdict: (c) => (c.childAges.includes("under6") ? ["now", "Socket covers, corner guards and blind-cord clips, plus anchored shelves — toddlers find these first."] : null) },
   { room: "living", name: "Closed shoe rack", cost: "₹2k–6k", verdict: (c) => ["now", `${c.vastu ? "Shoes come off at the door. Vastu: keep it to the south or west of the entrance, not the north-east." : "Shoes come off at the door — a closed rack keeps dust and smell in."}${c.people >= 3 ? " Pick 4+ shelves; shoes multiply fast with more people." : ""}`] },
   { room: "living", name: "Curtains (sheer + lined)", cost: "₹2k–6k per window", verdict: () => ["now", "Privacy and heat control from day one."] },
-  { room: "living", name: "Inverter and battery", item: "inverter", cost: "₹15k–22k", verdict: (c) => (c.work === "wfh" || c.work === "hybrid" ? ["now", "Size it from the essential load and real outage duration; use a qualified installer and the maker's ventilation and battery-location requirements."] : ["later", "Check the building's actual outage pattern, then size backup only for the loads that must stay on."]) },
-  { room: "living", name: "Dining table", item: "dining", cost: (c) => (seats(c) === 4 ? "₹12k–45k" : seats(c) === 6 ? "₹20k–75k" : seats(c) === 8 ? "₹40k–1L" : seats(c) <= 12 ? "₹60k–1.5L" : "₹1L–3L"), verdict: (c) => (c.small ? ["skip", c.rent && !c.allowDrill ? "Use a freestanding drop-leaf table or the kitchen counter; a wall-mounted table conflicts with your no-drill restriction." : "A measured drop-leaf table or the kitchen counter frees the floor."] : c.has("kids") || c.has("elders") ? ["now", `You need ${c.people} everyday places; plan up to ${seats(c)} seats across one or more measured tables while preserving circulation${c.childAges.includes("under6") ? " and avoiding sharp corners" : ""}.`] : ["later", `Live in the space a month, measure it, then plan up to ${seats(c)} seats across one or more tables without blocking circulation.`]) },
+  { room: "living", name: "Inverter and battery", item: "inverter", cost: "₹15k–22k", verdict: (c) => (c.work === "wfh" || c.work === "hybrid" ? ["now", "A power cut mid-call isn't an option; it keeps the Wi-Fi, fans and lights running. Size it for those, not the AC."] : ["later", "Ask the neighbours how often power goes — over an hour a day, buy one."]) },
+  { room: "living", name: "Dining table", item: "dining", cost: (c) => (seats(c) === 4 ? "₹12k–45k" : seats(c) === 6 ? "₹20k–75k" : seats(c) === 8 ? "₹40k–1L" : seats(c) <= 12 ? "₹60k–1.5L" : "₹1L–3L"), verdict: (c) => (c.small ? ["skip", c.rent && !c.allowDrill ? "A freestanding drop-leaf table or the kitchen counter frees the floor." : "A fold-down wall table or the kitchen counter frees the floor."] : c.has("kids") || c.has("elders") ? ["now", `${tableFor(c)}, so everyone eats together${c.childAges.includes("under6") ? " — rounded corners while the kids are small" : ""}.`] : ["later", `Live in the space a month first, then buy ${tableFor(c).toLowerCase()} that fits.`]) },
   { room: "living", name: "Pooja unit", cost: "₹3k–15k", verdict: (c) => (c.vastu ? ["now", "Place it in the north-east corner."] : null) },
-  { room: "living", name: "TV and stand", item: "tv", cost: "₹25k–60k", verdict: (c) => ["later", c.rent && !c.allowDrill ? "Use a stable floor stand and anti-tip restraint that does not violate the lease." : "Plan the viewing distance, safe anchoring and plug points before buying."] },
+  { room: "living", name: "TV and stand", item: "tv", cost: "₹25k–60k", verdict: (c) => ["later", c.rent && !c.allowDrill ? "A floor stand instead of a wall mount — no holes to explain at handover." : "Plan the wall, conduit and plug points before painting."] },
   { room: "living", name: "Rug", cost: "₹3k–12k", verdict: (c) => ["later", c.climate === "humid" ? "Cotton dhurrie, not jute — jute holds damp in the monsoon." : "Buy after the sofa so the size is right."] },
   { room: "living", name: "Centre table", cost: "₹5k–15k", verdict: (c) => (c.small ? ["skip", "Two nesting side tables do the job and tuck away."] : ["later", "Buy after the sofa so the proportions work."]) },
 
   // Balcony
-  { room: (c) => (c.balcony ? "balcony" : "bathroom"), name: "Washing machine after an installation check", item: "washer", core: true, cost: (c) => bySize(c, "₹12k–30k", "₹16k–35k", c.people <= 8 ? "₹22k–55k" : "₹35k–80k"), verdict: (c) => ["now", `${bySize(c, "6–7 kg", "7–8 kg", c.people <= 8 ? "9–12 kg" : "A 10–12 kg machine may still need multiple cycles")} is a starting point. Place it only where the manufacturer permits and where a plumber/electrician confirms water, drainage, ventilation, weather protection and a protected socket; no balcony does not automatically make the bathroom safe.`] },
-  { room: (c) => (c.balcony ? "balcony" : "bathroom"), name: "Dryer", item: "dryer", cost: "₹30k–55k", verdict: (c) => (!c.balcony ? ["later", "First verify a ventilated, manufacturer-approved installation point and whether indoor drying is actually a problem."] : c.climate === "humid" && c.busy ? ["later", "Consider it after one monsoon, once you know drying time and have a safe power and ventilation plan."] : ["skip", "A drying stand may cover the need without another appliance."]) },
-  { room: (c) => (c.balcony ? "balcony" : "bathroom"), name: "Clothes drying stand", cost: "₹1.5k–4k", verdict: (c) => ["now", !c.balcony ? "Use a freestanding rack in a ventilated dry area; do not assume a wet bathroom is suitable for laundry appliances or permanent ceiling hardware." : c.rent && !c.allowDrill ? "Use a foldable floor stand; permanent pulley hangers are outside your permissions." : "Choose a floor stand first; add a rated pulley only after checking the fixing point."] },
-  { room: "balcony", name: "Bird deterrence", cost: "₹1.5k–5k", verdict: (c) => (c.rent && !c.allowExterior ? ["later", "Exterior netting is outside the permissions you selected. Ask the landlord and society, and preserve fire and rescue access before installing anything."] : ["later", "Install only if pigeons are a real problem, with society approval, a suitable fire-rated system and emergency access preserved."]) },
-  { room: "balcony", name: "Balcony safety barrier assessment", core: true, cost: "₹2k–25k", verdict: (c) => (c.childAges.some((age) => age === "under6" || age === "6to12" || age === "unknown") || c.petTypes.some((pet) => pet === "cat" || pet === "dog" || pet === "other") ? ["now", c.rent && !c.allowExterior ? "The current permissions do not allow exterior work. Keep climbable furniture away from the edge and obtain landlord/society approval for a professionally assessed barrier." : "Have the railing gaps, climbability, fixings, fire egress and society rules assessed before choosing a barrier; ‘invisible’ wire is not automatically suitable."] : null) },
-  { room: "balcony", name: "Outdoor shade", cost: "₹2k–6k", verdict: (c) => (hot(c) ? c.rent && !c.allowExterior ? ["later", "Exterior blinds are outside the current permissions; use movable indoor shading until written approval exists."] : ["now", "Choose outdoor-rated shade only after checking wind load, drainage, fixing points and society rules."] : ["later", "Add only after observing harsh afternoon sun and checking the fixing rules."]) },
-  { room: "balcony", name: "Plants and planters", cost: "₹1k–5k", verdict: (c) => ["later", c.has("pets") ? "Choose from a species-specific veterinary poison-control source and verify the botanical name; a plant safe for a dog or cat may not be safe for a bird or small pet." : c.childAges.includes("under6") ? "Use non-toxic plants in stable, inaccessible pots; avoid relying on ambiguous common names." : "Choose plants for the actual light and watering routine; keep saucers drained."] },
+  { room: (c) => (c.balcony ? "balcony" : "bathroom"), name: "Washing machine (fully automatic)", item: "washer", core: true, cost: (c) => bySize(c, "₹12k–30k", "₹16k–35k", c.people <= 8 ? "₹22k–55k" : "₹35k–80k"), verdict: (c) => ["now", `${bySize(c, "6–7 kg", "7–8 kg", c.people <= 8 ? "9–12 kg" : "10–12 kg, run twice a day,")} suits your household. ${tight(c) ? "A top-load fully automatic is fine on a tight budget." : c.climate === "humid" ? "Front-load spins clothes drier — it matters when monsoon laundry won't dry." : "Front-load is gentler on clothes and spins them drier."}${c.balcony ? "" : " With no balcony, it needs a tap, a drain and a dry, earthed socket — never stand it on a wet bathroom floor."}`] },
+  { room: (c) => (c.balcony ? "balcony" : "bathroom"), name: "Dryer", item: "dryer", cost: "₹30k–55k", verdict: (c) => (!c.balcony ? [c.climate === "humid" ? "now" : "later", "With no balcony to dry clothes, a dryer (or a washer-dryer) stops damp laundry hanging indoors."] : c.climate === "humid" && c.busy ? ["later", "Monsoon laundry can take three days to dry — a dryer ends the damp smell."] : ["skip", "Sun and a drying stand do it for free."]) },
+  { room: (c) => (c.balcony ? "balcony" : "bathroom"), name: "Clothes drying stand", cost: "₹1.5k–4k", verdict: (c) => ["now", !c.balcony ? "A foldable stand by a window, with the fan on." : c.rent && !c.allowDrill ? "A foldable floor stand — ceiling pulley hangers need drilling." : "A ceiling pulley hanger keeps the floor free."] },
+  { room: "balcony", name: "Bird net", cost: "₹1.5k–5k", verdict: (c) => ["now", c.rent && !c.allowExterior ? "Pigeons move in fast. Get the landlord's and society's OK, then net it before the first nest." : "Pigeons move in fast. Nets are cheap; cleaning droppings is not. Check your society's rules first."] },
+  { room: "balcony", name: "Balcony safety grill", core: true, cost: "₹8k–25k", verdict: (c) => (c.childAges.some((age) => age === "under6" || age === "6to12" || age === "unknown") || c.petTypes.some((pet) => pet === "cat" || pet === "dog" || pet === "other") ? ["now", c.rent && !c.allowExterior ? "Ask the landlord — a child or pet safety grill is a fair request. Until then, keep anything climbable away from the railing." : "Check the railing gaps first. An invisible steel-wire grill keeps the view — make sure it still leaves a fire exit."] : null) },
+  { room: "balcony", name: "Outdoor blinds", cost: "₹2k–6k", verdict: (c) => (hot(c) ? ["now", c.rent && !c.allowExterior ? "Afternoon sun on the balcony heats the whole flat — use freestanding screens, or ask the landlord about blinds." : "Afternoon sun on the balcony heats the whole flat; blinds stop it at the source."] : ["later", "Add if the balcony gets harsh afternoon sun."]) },
+  { room: "balcony", name: "Plants and planters", cost: "₹1k–5k", verdict: (c) => ["later", c.petTypes.includes("bird") ? "Check each plant with an avian vet first — birds react to plants that cats and dogs tolerate." : c.has("pets") ? "Pick pet-safe plants such as areca palm, spider plant and calathea, and check them for your pet." : c.childAges.includes("under6") ? "Pick non-toxic plants and keep the pots out of reach." : c.busy ? "Start with hard-to-kill ones: snake plant, money plant, ZZ." : "Tulsi, curry leaves and mint pay you back in the kitchen."] },
   { room: "balcony", name: "Balcony seating", cost: "₹4k–12k", verdict: (c) => ["later", c.small ? "Two folding chairs that come out when you need them." : "A small bistro set turns it into the best spot for morning chai."] },
 ];
 
@@ -408,7 +410,7 @@ export const TIPS: Tip[] = [
   { room: "kitchen", kind: "do", text: "Put the masala drawer right beside the stove, at hip height.", when: (c) => c.cooking === "daily" },
   { room: "kitchen", kind: "do", text: "Ask for edge-banding on every board edge — that's where water gets in.", when: (c) => c.own },
   { room: "kitchen", kind: "do", text: "Line the shelves and platform before unpacking.", when: (c) => c.rent },
-  { room: "kitchen", kind: "do", text: "Fit alarms in suitable locations under the maker's guidance—often a smoke alarm in adjoining circulation and, where appropriate, a heat alarm for the kitchen. Know the LPG/electric shut-off, keep exits clear, and place a correctly rated serviced extinguisher near the exit—never behind the stove. Never use water on burning oil." },
+  { room: "kitchen", kind: "do", text: "Keep a 2 kg ABC fire extinguisher by the kitchen door (never behind the stove), fit a smoke alarm in the passage outside, and know where the gas shut-off is. Never use water on burning oil." },
   { room: "kitchen", kind: "do", text: "Agree a weekly menu and keep a shopping list on the fridge — it saves daily calls with your cook.", when: (c) => c.helpDoes("cooking") },
   { room: "kitchen", kind: "do", text: "Give each flatmate a fridge shelf and a labelled bin — it heads off most kitchen arguments.", when: (c) => c.has("flatmates") },
   { room: "kitchen", kind: "do", text: "Vastu: cook facing east, with the stove in the south-east.", when: (c) => c.vastu },
@@ -483,7 +485,7 @@ export const CHORES: Chore[] = [
     hours: () => 5,
     help: "₹1.5k–3.5k a month",
     machine: { name: "Robot vacuum-mop", cost: "₹15k–35k" },
-    pick: (c) => (c.helpDoes("cleaning") ? ["help", "Already covered — agree what ‘cleaning’ includes and how often deep cleaning happens."] : (c.busy || c.has("pets")) && tight(c) ? ["help", "Compare a part-time cleaner with a robot's purchase and maintenance cost."] : c.busy || c.has("pets") ? ["machine", c.has("pets") ? "Runs frequently for pet hair and dust, but edges and deep cleaning still need a person." : "Handles routine floor dust; you still do edges and periodic deep cleaning."] : ["you", "Keep it yourself if the routine is manageable; add help only when the time cost is real."]),
+    pick: (c) => (c.helpDoes("cleaning") ? ["help", "Already covered — ask for a weekly deep clean too."] : (c.busy || c.has("pets")) && tight(c) ? ["help", "A part-time maid costs less than a robot vacuum to start; add the robot later."] : c.busy || c.has("pets") ? ["machine", c.has("pets") ? "Runs frequently for pet hair and dust, but edges and deep cleaning still need a person." : "Handles routine floor dust; you still do edges and periodic deep cleaning."] : ["you", "Keep it yourself if the routine is manageable; add help only when the time cost is real."]),
     savedFraction: { help: 1, machine: 0.65 },
   },
   {
@@ -491,7 +493,7 @@ export const CHORES: Chore[] = [
     hours: (c) => scale(c, c.cooking === "daily" ? 6 : c.cooking === "light" ? 3 : 1),
     help: "₹1.5k–3k a month",
     machine: { name: "Dishwasher with kadhai cycle", cost: "₹20k–53k" },
-    pick: (c) => (c.cooking === "rarely" ? ["you", "A few plates — not worth outsourcing."] : c.helpDoes("dishes") ? ["help", "Dishes are already in the agreed duties."] : c.busy && !tight(c) ? ["machine", "A dishwasher cuts hands-on washing, but loading, unloading and unsuitable cookware remain."] : ["help", "Usually the first recurring job worth pricing locally."]),
+    pick: (c) => (c.cooking === "rarely" ? ["you", "A few plates — not worth outsourcing."] : c.helpDoes("dishes") ? ["help", "Your help covers the bartan."] : c.busy && !tight(c) ? ["machine", "Load it at night, unload in the morning."] : ["help", "Usually the first job worth handing over."]),
     savedFraction: { help: 1, machine: 0.75 },
   },
   {
@@ -499,14 +501,14 @@ export const CHORES: Chore[] = [
     hours: (c) => scale(c, 3),
     help: "Not usually a maid's job",
     machine: { name: "Fully automatic washer", cost: "₹12k–50k" },
-    pick: (c) => (c.helpDoes("laundry") ? ["help", "Laundry is already in the agreed duties."] : ["machine", c.climate === "humid" && c.busy ? "The washer handles the cycle; drying and folding still need a plan in the monsoon." : "The washer handles the cycle; loading, drying and folding remain."]),
+    pick: (c) => (c.helpDoes("laundry") ? ["help", "Your help runs the machine and hangs the clothes."] : ["machine", c.climate === "humid" && c.busy ? "Front-load, plus a dryer in the monsoon." : "Load at night, hang in the morning."]),
     savedFraction: { help: 0.9, machine: 0.55 },
   },
   {
     task: "Ironing",
     hours: () => 2,
     help: "Local istriwala, ₹10–20 a piece",
-    pick: (c) => (c.helpDoes("ironing") ? ["help", "Ironing is already in the agreed duties."] : c.busy || c.work === "hybrid" || c.work === "wfh" ? ["local", "Price the neighbourhood istriwala against your weekly volume."] : ["you", "Keep it yourself if the weekly volume is small."]),
+    pick: (c) => (c.helpDoes("ironing") ? ["help", "Your help takes it on."] : c.busy || c.work === "hybrid" || c.work === "wfh" ? ["local", "Hand it to the neighbourhood istriwala."] : ["you", "A steam iron and an hour on Sunday."]),
     savedFraction: { help: 1, local: 0.9 },
   },
   {
@@ -514,14 +516,14 @@ export const CHORES: Chore[] = [
     hours: (c) => scale(c, c.cooking === "daily" ? 10 : c.cooking === "light" ? 4 : 1),
     help: "Cook, ₹4k–9k a month for two meals",
     machine: { name: "Electric pressure cooker", cost: "₹5k–10k" },
-    pick: (c) => (c.helpDoes("cooking") ? ["help", "Cooking is already in the agreed duties."] : c.cooking === "daily" && c.busy ? ["help", "If the budget supports it, price a cook against the time daily meals consume."] : ["machine", "An electric pressure cooker makes some staples hands-off; it does not replace all cooking."]),
+    pick: (c) => (c.helpDoes("cooking") ? ["help", "Your cook has it covered."] : c.cooking === "daily" && c.busy ? ["help", "Hire a cook: home food every day, and two hours of your evening back."] : ["machine", "An electric pressure cooker makes dal and rice hands-off."]),
     savedFraction: { help: 1, machine: 0.25 },
   },
   {
     task: "Bathroom cleaning",
     hours: () => 1.5,
     help: "Usually part of the maid's weekly work",
-    pick: (c) => (c.helpDoes("cleaning") ? ["help", "Agree the frequency and products explicitly."] : ["you", "Use a long-handled brush and ventilate; add paid cleaning if the physical load is unsuitable."]),
+    pick: (c) => (c.helpDoes("cleaning") ? ["help", "Ask for it twice a week."] : ["you", "Twenty minutes, twice a week, with a long-handled brush."]),
     savedFraction: { help: 1 },
   },
 ];
@@ -530,20 +532,20 @@ export const CHORES: Chore[] = [
 
 export const CHECKS: { text: string; when?: (c: Ctx) => boolean }[] = [
   { text: "Photograph every wall, tile and fitting with timestamps — it's your deposit evidence.", when: (c) => c.rent },
-  { text: "Do not drill, repaint, use permanent adhesive or alter the exterior unless that exact work is approved in writing by the landlord and, where relevant, the society.", when: (c) => c.rent },
+  { text: "Get the landlord's OK in writing before any drilling, painting or exterior work — curtain rods, AC, chimney, geyser.", when: (c) => c.rent },
   { text: "Book the modular kitchen and wardrobes about six weeks ahead — finish carpentry before you move in.", when: (c) => c.own },
-  { text: "Deep-clean before furniture arrives. Use pest treatment only for evidence of infestation, with a licensed operator who accounts for children, pets, pregnancy, respiratory conditions, ventilation and re-entry time." },
-  { text: "Get the building or water supplier's current laboratory report, or test for the actual microbial and chemical risks plus hardness. TDS alone cannot choose a safe treatment system." },
-  { text: "Have a qualified electrician check earthing, the distribution board, correctly rated circuits and RCD/RCCB protection — especially for the geyser, AC, washer and every wet-area installation." },
-  { text: "Fit mosquito mesh on the windows; in rentals use a removable system compatible with the permissions and frame.", when: (c) => c.climate !== "hills" },
+  { text: "Deep clean before the furniture arrives. If you see cockroaches or termites, book a licensed pest-control service and stay out for the time they advise — longer with kids or pets." },
+  { text: "Get the water tested at a lab for microbes and hardness — it decides RO, UV or a softener far better than a TDS meter." },
+  { text: "Have an electrician check the earthing, the MCB board, an RCCB, and 15 A points for the geyser, AC and washer." },
+  { text: "Fit mosquito mesh on the windows (velcro mesh works in rentals).", when: (c) => c.climate !== "hills" },
   { text: "Check walls for damp patches and leaks before you sign — the monsoon only makes them worse.", when: (c) => c.climate === "humid" },
   { text: "Check that windows seal properly — drafts cost more in heating than any curtain can fix.", when: (c) => c.climate === "hills" },
   { text: "Ask the neighbours how long power cuts last.", when: (c) => c.work !== "wfh" && c.work !== "hybrid" },
   { text: "Book broadband before moving — you'll need it on day one.", when: (c) => c.work === "wfh" || c.work === "hybrid" },
-  { text: "Apply to transfer your gas connection before moving and confirm the supplier's current lead time.", when: (c) => c.cooking !== "rarely" },
-  { text: "For a bird household, keep cages away from cooking fumes and aerosols, never run a ceiling fan while the bird is loose, secure windows and verify cookware and household products with an avian veterinarian.", when: (c) => c.petTypes.includes("bird") },
+  { text: "Apply to transfer your gas connection a week or two before moving.", when: (c) => c.cooking !== "rarely" },
+  { text: "With a bird at home: keep the cage away from kitchen fumes and sprays, never run the fan while it's out, and ask an avian vet about non-stick pans.", when: (c) => c.petTypes.includes("bird") },
   { text: "Fix a griha pravesh date and do the puja before the furniture moves in.", when: (c) => c.vastu },
-  { text: "Follow the current local verification and employment requirements for household help, and handle identity documents securely.", when: (c) => c.hasHelp },
+  { text: "Get your help police-verified through your state police's citizen portal, and keep copies of their ID safe.", when: (c) => c.hasHelp },
   { text: "Decide where live-in help will sleep and bathe before you sign, and agree privacy, hours and a weekly day off.", when: (c) => c.helpLivesIn === true },
   { text: "Check the lift works, or that your parents' room is on the entry floor — stairs decide how comfortably they can stay.", when: (c) => c.has("elders") },
   { text: "Agree in writing who owns the shared fridge, washer and purifier, and how they're split when someone moves out.", when: (c) => c.has("flatmates") },
@@ -557,7 +559,7 @@ const band = (...bands: Budget[]) => (c: Ctx) => bands.includes(c.budget ?? "mid
 export const BUDGET_TIPS: { kind: "spend" | "save"; text: string; when: (c: Ctx) => boolean }[] = [
   { kind: "save", text: "Buy the fridge, washer and AC in a festive sale (Diwali, Republic Day), but check the price a month earlier — the headline 'up to 75% off' covers only a few models.", when: band("tight", "mid", "high") },
   { kind: "save", text: "Buy appliances new and furniture second-hand: appliances need a warranty, but a solid wood bed or table rarely fails. Check used wood for termite dust and sofas for bed bugs.", when: band("tight") },
-  { kind: "save", text: "If you might move within a year, compare the full rental contract cost with used furniture and resale value before renting a sofa or bed; do not rent a mattress.", when: (c) => c.rent && band("tight")(c) },
+  { kind: "save", text: "If you might move within a year, rent the sofa and bed (about ₹300–1,600 a month each; longer plans cost less) and buy once you're settled. Buy the mattress new.", when: (c) => c.rent && band("tight")(c) },
   { kind: "spend", text: "Prioritise the mattress or seating you use daily, after subtracting everything you already own; use modular or flat-pack storage where durability is less critical.", when: band("mid") },
   { kind: "save", text: "Keep about 10% aside for what nobody budgets for: extension boards, curtain rods, hooks, bulbs and a basic toolkit.", when: () => true },
   { kind: "spend", text: "Get three quotes for carpentry and ask each for the board brand, thickness and hardware make in writing — that's where quotes quietly differ.", when: (c) => c.own && !tight(c) },
@@ -598,21 +600,21 @@ export const STYLE_LOOK: Record<StyleId, Record<LookRoom, string>> = {
     living: "A deep sofa with rounded arms, a chunky wooden or stone coffee table, and one sculptural vase with dried grass.",
     kitchen: "Open wooden shelves with handmade bowls, and one trailing plant above the counter.",
     bathroom: "A teak or bamboo stool, cotton waffle towels and a stone soap dish.",
-    balcony: "Low cane or teak seating, a flat-woven outdoor rug and large plants chosen for the actual light and household.",
+    balcony: "Low cane or teak seating, a flat-woven outdoor rug and big terracotta pots of areca palm.",
   },
   japandi: {
     bedroom: "A plain wooden bed with clean lines, linen bedding and a paper lantern — one quiet print, nothing more.",
     living: "A low, slim-armed sofa, a round wooden coffee table and a single branch in a stoneware vase.",
     kitchen: "Closed, handle-less storage and one wooden tray for daily oils and spices — nothing else on the counter.",
     bathroom: "A wooden bath mat, a stoneware tumbler and towels in one muted colour.",
-    balcony: "A simple bench with a supportive seat, bamboo-toned screens where permitted and one pet-safe plant chosen for the actual light.",
+    balcony: "A low bench or floor cushion, bamboo screens and one bonsai or snake plant.",
   },
   scandinavian: {
     bedroom: "A light oak or white bed, a knitted throw and a simple clip-on reading lamp.",
     living: "A light grey or beige sofa on tapered legs, a white or oak coffee table and a soft wool throw.",
     kitchen: "White or pale wood with black or brass handles, and a row of matching glass jars.",
     bathroom: "White towels with one stripe, a wooden towel ladder and a small green plant.",
-    balcony: "Foldable light-toned or wooden bistro chairs, outdoor-rated lights only where a protected socket exists, and herbs in plain pots.",
+    balcony: "Foldable white or wooden bistro chairs, string lights and herbs in plain pots.",
   },
   "warm-minimalist": {
     bedroom: "A clean-lined bed with a fabric headboard, matching side tables and one warm lamp each side.",
@@ -626,7 +628,7 @@ export const STYLE_LOOK: Record<StyleId, Record<LookRoom, string>> = {
     living: "A charcoal or deep-green sofa, a smoked-glass or black metal table and pools of lamp light instead of ceiling light.",
     kitchen: "Dark containers or lower cabinets, black or brass taps and one warm pendant over the counter.",
     bathroom: "Charcoal towels, a black metal shelf and a bronze or brass mirror frame.",
-    balcony: "Deep-toned wicker seating, matching planters and outdoor-rated warm lights only where a protected socket exists.",
+    balcony: "Dark wicker seating, black planters and warm fairy lights.",
   },
   "modern-classic": {
     bedroom: "A tufted or panelled headboard, crisp white bedding with a piped edge and a pair of matching lamps.",
@@ -639,8 +641,8 @@ export const STYLE_LOOK: Record<StyleId, Record<LookRoom, string>> = {
     bedroom: "A cane or wooden bed, layered block-print quilts and a macramé or textile hanging.",
     living: "A low sofa piled with mismatched cushions, layered cotton dhurries, cane chairs and plenty of plants.",
     kitchen: "Open shelves of mixed ceramics, a hanging basket for onions and a printed runner.",
-    bathroom: "A woven basket for towels, printed towels and a pet-safe plant only if daylight and ventilation suit it.",
-    balcony: "Layered cushions on supportive seating, a freestanding swing only if the floor area and load rating allow it, and pet-safe plants at varied heights.",
+    bathroom: "A woven basket for towels, printed towels and a trailing money plant.",
+    balcony: "Floor cushions, a hanging chair if the ceiling allows, and plants at every height.",
   },
   "mid-century": {
     bedroom: "A wooden bed on tapered legs, a teak bedside table and a globe or mushroom lamp.",
@@ -661,7 +663,7 @@ export const STYLE_LOOK: Record<StyleId, Record<LookRoom, string>> = {
     living: "A colourful sofa, one vintage find, art hung salon-style and one bold rug to tie it together.",
     kitchen: "Mismatched mugs on hooks, colourful canisters and a print leaning on the counter.",
     bathroom: "Patterned towels, a framed print and a bold coloured mat.",
-    balcony: "Painted chairs, mismatched planters and outdoor-rated lights only where a protected socket exists.",
+    balcony: "Painted chairs, mismatched planters and string lights.",
   },
 };
 
@@ -681,7 +683,7 @@ export const MOOD_LOOK: Record<MoodId, string> = {
   airy: "Sheer curtains, furniture on raised legs and a large mirror opposite a window.",
   creative: "A leaning picture ledge or pinboard for what you're collecting — easy to change, no drilling.",
   grounded: "Natural textures low down: a cotton dhurrie, wooden stools and plants on the floor.",
-  romantic: "Soft curves, dimmable warm light and one tactile focal piece in the room.",
+  romantic: "Soft curves, dimmable warm light and a fabric headboard or canopy.",
   energised: "Bright daylight, colourful objects on an open shelf and one bold accent piece you see first.",
 };
 

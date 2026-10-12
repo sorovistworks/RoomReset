@@ -714,18 +714,8 @@ export function isComplete(a: Answers): boolean {
     (Object.keys(CHOICES) as ChoiceKey[]).every((k) => a[k] !== null) &&
     FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id));
   if (!common || a.schemaVersion === 1) return common;
-  return (
-    a.balcony !== null &&
-    a.bathrooms !== null &&
-    a.guests !== null &&
-    a.people !== null &&
-    a.people >= minPeople(a.household) &&
-    a.inventoryConfirmed &&
-    a.budgetAmount !== null &&
-    (!a.household.includes("kids") || a.childAges.length > 0) &&
-    (!a.household.includes("pets") || a.petTypes.length > 0) &&
-    (a.help === "none" || (a.helpDuties.length > 0 && (a.help !== "full-time" || a.helpLivesIn !== null)))
-  );
+  // Follow-up details (bathrooms, ages, pets, help duties, exact amount) are optional; the plan fills sensible defaults.
+  return a.balcony !== null && (a.people === null || a.people >= minPeople(a.household));
 }
 
 export const byId = <T extends { id: string }>(list: T[], id: string): T => list.find((x) => x.id === id)!;

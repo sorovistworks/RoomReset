@@ -125,12 +125,11 @@ const CHOICE_LISTS: Record<Exclude<ChoiceKey, "tenure" | "home">, Option<string>
 
 function stepValid(key: StepKey, a: Answers): boolean {
   if (key === "boldness") return true;
-  if (key === "home") return a.tenure !== null && a.home !== null && a.balcony !== null && a.bathrooms !== null;
-  if (key === "fixtures") return a.inventoryConfirmed && FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id));
-  if (key === "household")
-    return a.people !== null && a.people >= minPeople(a.household) && a.guests !== null && (!a.household.includes("kids") || a.childAges.length > 0) && (!a.household.includes("pets") || a.petTypes.length > 0);
-  if (key === "help") return a.help !== null && (a.help === "none" || (a.helpDuties.length > 0 && (a.help !== "full-time" || a.helpLivesIn !== null)));
-  if (key === "budget") return a.budget !== null && a.budgetAmount !== null;
+  if (key === "home") return a.tenure !== null && a.home !== null && a.balcony !== null;
+  if (key === "fixtures") return FIXTURES.every((f) => fixtureOptions(f, a.tenure === "own").some((o) => o.id === a.fixtures[f.key]?.id));
+  if (key === "household") return a.people === null || a.people >= minPeople(a.household);
+  if (key === "help") return a.help !== null;
+  if (key === "budget") return a.budget !== null;
   if (key in LIMITS) return (a[key as ListKey] as string[]).length >= (STEPS.find((s) => s.key === key)?.min ?? 0);
   return a[key as ChoiceKey] !== null;
 }
@@ -210,15 +209,15 @@ export function Questionnaire() {
     if (delta > 0 && !valid)
       return setNotice(
         step.key === "home"
-          ? "Confirm the tenure, size, bathroom count and whether there is a balcony."
+          ? "Choose rented or owned, the size, and whether there's a balcony."
           : step.key === "fixtures"
-            ? "Choose every fixed surface and confirm what you are bringing."
+            ? "Choose an option for each surface to continue."
             : step.key === "household"
-              ? "Confirm the headcount, guest frequency and any child or pet details that apply."
+              ? "The headcount can't be lower than the people you picked."
               : step.key === "help"
-                ? "Confirm what your help covers and whether full-day help lives in."
+                ? "Choose an option to continue."
                 : step.key === "budget"
-                  ? "Choose a band and enter the most you can spend."
+                  ? "Choose a budget to continue."
                   : isList
                     ? "Choose at least one option to continue."
                     : "Choose an option to continue.",

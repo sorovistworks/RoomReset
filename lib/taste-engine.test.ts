@@ -48,12 +48,12 @@ test("sanitizeAnswers drops unknown ids and enforces limits", () => {
   assert.deepEqual(sanitizeAnswers(null), EMPTY_ANSWERS);
 });
 
-test("completion needs every single-choice life answer, but household is optional", () => {
+test("completion needs every single-choice life answer; household follow-ups are optional", () => {
   assert.ok(isComplete({ ...base, household: [] }));
-  assert.ok(!isComplete({ ...base, people: null }));
-  assert.ok(!isComplete({ ...base, guests: null }));
+  // Optional follow-ups fall back to sensible defaults in the plan.
+  assert.ok(isComplete({ ...base, people: null, guests: null, bathrooms: null, inventoryConfirmed: false, budgetAmount: null }));
+  assert.ok(!isComplete({ ...base, household: ["partner", "kids"], people: 1 })); // fewer people than picked
   assert.ok(!isComplete({ ...base, balcony: null }));
-  assert.ok(!isComplete({ ...base, inventoryConfirmed: false }));
   assert.ok(!isComplete({ ...base, budget: null }));
   assert.ok(!isComplete({ ...base, fixtures: { ...base.fixtures, counter: null } }));
   assert.ok(!isComplete(EMPTY_ANSWERS));
