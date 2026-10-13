@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // The cushion mark; the button is a hole, so it sits on any background.
-const CUSHION = "M16 16Q50 27 84 16Q73 50 84 84Q50 73 16 84Q27 50 16 16ZM54.5 50a4.5 4.5 0 1 0-9 0a4.5 4.5 0 1 0 9 0Z";
+const CUSHION = "M26.9 19Q50 24 73.1 19Q84 16 81 26.9Q76 50 81 73.1Q84 84 73.1 81Q50 76 26.9 81Q16 84 19 73.1Q24 50 19 26.9Q16 16 26.9 19ZM54.5 50a4.5 4.5 0 1 0-9 0a4.5 4.5 0 1 0 9 0Z";
 
 export function Wordmark({ className = "", mark = false }: { className?: string; mark?: boolean }) {
   const pathname = usePathname();
@@ -17,18 +17,17 @@ export function Wordmark({ className = "", mark = false }: { className?: string;
         e.preventDefault();
         window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       }}
-      className={`font-serif text-[1.65rem] leading-none tracking-tight ${className}`}
+      className={`inline-flex items-center gap-1.5 font-serif text-[1.65rem] leading-none tracking-tight ${className}`}
       aria-label="Habitaste — home page"
     >
-      {mark ? (
-        <svg viewBox="0 0 100 100" className="size-10 text-terracotta" aria-hidden>
+      {mark && (
+        <svg viewBox="0 0 100 100" className="size-9 text-terracotta" aria-hidden>
           <path fill="currentColor" fillRule="evenodd" d={CUSHION} />
         </svg>
-      ) : (
-        <>
-          Habi<span className="italic text-clay">taste</span>
-        </>
       )}
+      <span>
+        Habi<span className="italic text-clay">taste</span>
+      </span>
     </Link>
   );
 }
