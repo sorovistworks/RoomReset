@@ -19,7 +19,7 @@ export function SiteHeader() {
         Skip to content
       </a>
       <div className="wrap flex h-16 items-center justify-between gap-6">
-        <Wordmark />
+        <Wordmark mark />
         <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} className="text-sm text-ink-soft transition-colors hover:text-ink">
